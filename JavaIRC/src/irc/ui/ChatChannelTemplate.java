@@ -13,7 +13,7 @@ import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
 
-public class ChatChannel extends JFrame {
+public abstract class ChatChannelTemplate extends JFrame {
 	private JTextField textField;
 
 	/**
@@ -36,7 +36,7 @@ public class ChatChannel extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public ChatChannel() {
+	public ChatChannelTemplate() {
 		setBounds(100, 100, 800, 450);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
