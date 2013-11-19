@@ -43,6 +43,7 @@ public class ChannelMenu extends JFrame {
 	private JCheckBox chckbxPrivChan;
 	private JCheckBox chckbxChannelOpPriv;
 	private JCheckBox chckbxSecretChannelFlag;
+	private boolean initialClick = true;
 
 	/**
 	 * Launch the application.
@@ -94,6 +95,14 @@ public class ChannelMenu extends JFrame {
 		createChannel.setLayout(null);
 		
 		txtChannelNameHere = new JTextField();
+		txtChannelNameHere.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				if(initialClick)
+					txtChannelNameHere.setText("");
+				initialClick = false;
+			}
+		});
 		txtChannelNameHere.setFont(new Font("Tahoma", Font.PLAIN, 11));
 		txtChannelNameHere.setText("Set Topic Here");
 		txtChannelNameHere.setBounds(10, 11, 409, 28);

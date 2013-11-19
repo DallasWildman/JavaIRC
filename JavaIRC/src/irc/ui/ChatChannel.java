@@ -17,8 +17,9 @@ public class ChatChannel extends JFrame {
 	private JTextField textField;
 
 	/**
-	 * Launch the application.
+	 * For editing purposes only!
 	 */
+	/*
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
