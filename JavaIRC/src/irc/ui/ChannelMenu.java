@@ -23,6 +23,8 @@ import irc.core.IRCEventListener;
 import irc.core.IRCMain;
 import irc.core.IRCModeParser;
 import irc.core.IRCUserInfo;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class ChannelMenu extends JFrame {
 	private JTextField textField;
@@ -40,6 +42,9 @@ public class ChannelMenu extends JFrame {
 	private JCheckBox chckbxSecretChannelFlag;
 	private boolean initialClick = true;
 	private IRCMain main;
+	private Listener internalList = new Listener();
+	private List list;
+	private JButton btnRefresh;
 
 	/**
 	 * Launch the application.
@@ -62,8 +67,8 @@ public class ChannelMenu extends JFrame {
 	 * @throws IOException 
 	 */
 	public ChannelMenu() throws IOException {
-		main = new IRCMain("irc://quakenet", new int[] {6667} , "", "dwildman", "", "");
-		main.addIRCEventListener(new Listener());
+		main = new IRCMain("irc.freenode.net", new int[] {1024, 2048, 6667, 6669} , "", "newuser", "", "");
+		main.addIRCEventListener(internalList);
 		setBounds(100, 100, 450, 540);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setLayout(new GridLayout(1, 1, 0, 0));
@@ -75,7 +80,7 @@ public class ChannelMenu extends JFrame {
 		tabbedPane.addTab("Join", null, joinChannel, null);
 		joinChannel.setLayout(null);
 		
-		List list = new List();
+		list = new List();
 		list.setBounds(10, 10, 409, 212);
 		joinChannel.add(list);
 		
@@ -88,6 +93,16 @@ public class ChannelMenu extends JFrame {
 		button.setFont(new Font("Arial Black", Font.BOLD, 20));
 		button.setBounds(10, 271, 121, 94);
 		joinChannel.add(button);
+		
+		btnRefresh = new JButton("Refresh");
+		btnRefresh.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				getChannelList();
+			}
+		});
+		btnRefresh.setBounds(137, 276, 89, 46);
+		joinChannel.add(btnRefresh);
 		
 		Panel createChannel = new Panel();
 		tabbedPane.addTab("Create", null, createChannel, null);
@@ -162,8 +177,8 @@ public class ChannelMenu extends JFrame {
 		btnCreate.setBounds(29, 354, 162, 91);
 		createChannel.add(btnCreate);
 		main.connect();
-		getChannelList();
 	}
+	
 	private boolean[] getCheckBoxFlags(){
 		boolean flags[] = null;
 		flags[0] = chckbxModerated.isSelected();
@@ -179,73 +194,95 @@ public class ChannelMenu extends JFrame {
 	}
 	
 	private void getChannelList(){
+		if(!main.isConnected()){
+			list.add("Not Connected!");
+			return;}
+		long t = System.currentTimeMillis();
+		internalList.flush();
 		main.doList();
+		int liststart = -1;
+		while (liststart == -1)
+			liststart = internalList.result.indexOf("Reply #321");
+		int listend = -1;
+		while (listend == -1 || System.currentTimeMillis() < t + 5000)
+			listend = internalList.result.indexOf("Reply #323");
+		int index = liststart;
+		while (index < listend){
+			index = internalList.result.indexOf("Reply #322", index);
+			list.add(internalList.result.substring(index+2, internalList.result.indexOf(' ', index)));
+		}
+		internalList.flush();
+		return;
 	}
 	
 	private class Listener extends IRCEventAdapter implements IRCEventListener {
-		protected String result;
+		protected String result = "";
 	    public void onRegistered() {
-	      result = "Connected";
+	      result += "Connected\n";
 	    }
 	    
 	    public void onDisconnected() {
-	      result = "Disconnected";
+	      result += "Disconnected\n";
 	    }
 
 	    public void onError(String msg) {
-	      result = "Error: "+ msg;
+	      result += "Error: "+ msg+"\n";
 	    }
 	    
 	    public void onError(int num, String msg) {
-	      result = "Error #"+ num +": "+ msg;
+	      result += "Error #"+ num +": "+ msg+"\n";
 	    }
 
 	    public void onInvite(String chan, IRCUserInfo u, String nickPass) {
-	      result = chan +"> "+ u.getNick() +" invites "+ nickPass;
+	      result += chan +"> "+ u.getNick() +" invites "+ nickPass+"\n";
 	    }
 
 	    public void onJoin(String chan, IRCUserInfo u) {
-	      result = chan +"> "+ u.getNick() +" joins";
+	      result += chan +"> "+ u.getNick() +" joins"+"\n";
 	    }
 	    
 	    public void onKick(String chan, IRCUserInfo u, String nickPass, String msg) {
-	      result = chan +"> "+ u.getNick() +" kicks "+ nickPass;
+	      result += chan +"> "+ u.getNick() +" kicks "+ nickPass+"\n";
 	    }
 
 	    public void onMode(IRCUserInfo u, String nickPass, String mode) {
-	      result = "Mode: "+ u.getNick() +" sets modes "+ mode +" "+ 
-	          nickPass;
+	      result += "Mode: "+ u.getNick() +" sets modes "+ mode +" "+ 
+	          nickPass+"\n";
 	    }
 
 	    public void onMode(IRCUserInfo u, String chan, IRCModeParser mp) {
-	      result = chan +"> "+ u.getNick() +" sets mode: "+ mp.getLine();
+	      result += chan +"> "+ u.getNick() +" sets mode: "+ mp.getLine()+"\n";
 	    }
 
 	    public void onNick(IRCUserInfo u, String nickNew) {
-	      result = "Nick: "+ u.getNick() +" is now known as "+ nickNew;
+	    	result += "Nick: "+ u.getNick() +" is now known as "+ nickNew+"\n";
 	    }
 	    public void onNotice(String target, IRCUserInfo u, String msg) {
-	        result = target +"> "+ u.getNick() +" (notice): "+ msg;
-	      }
+	    	result += target +"> "+ u.getNick() +" (notice): "+ msg+"\n";
+	    }
 
-	      public void onPart(String chan, IRCUserInfo u, String msg) {
-	        result = chan +"> "+ u.getNick() +" parts";
-	      }
-	      
-	      public void onPrivmsg(String chan, IRCUserInfo u, String msg) {
-	        result = chan +"> "+ u.getNick() +": "+ msg;
-	      }
+	    public void onPart(String chan, IRCUserInfo u, String msg) {
+	    	result += chan +"> "+ u.getNick() +" parts"+"\n";
+	    }
 
-	      public void onQuit(IRCUserInfo u, String msg) {
-	        result = "Quit: "+ u.getNick();
-	      }
+	    public void onPrivmsg(String chan, IRCUserInfo u, String msg) {
+	    	result += chan +"> "+ u.getNick() +": "+ msg+"\n";
+	    }
 
-	      public void onReply(int num, String value, String msg) {
-	        result = "Reply #"+ num +": "+ value +" "+ msg;
-	      }
+	    public void onQuit(IRCUserInfo u, String msg) {
+	    	result += "Quit: "+ u.getNick()+"\n";
+	    }
 
-	      public void onTopic(String chan, IRCUserInfo u, String topic) {
-	        result = chan +"> "+ u.getNick() +" changes topic into: "+ topic;
-	      }
+	    public void onReply(int num, String value, String msg) {
+	    	result += "Reply #"+ num +": "+ value +" "+ msg+"\n";
+	    }
+
+	    public void onTopic(String chan, IRCUserInfo u, String topic) {
+	    	result += chan +"> "+ u.getNick() +" changes topic into: "+ topic+"\n";
+	    }
+	    
+	    protected synchronized void flush(){
+	    	result = "";
+	    }
 	}
 }
