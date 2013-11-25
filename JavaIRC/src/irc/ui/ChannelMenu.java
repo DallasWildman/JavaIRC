@@ -28,7 +28,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 public class ChannelMenu extends JFrame {
-	private JTextField textField;
+	private JTextField txtPleaseWaitConnecting;
 	private JTextField txtChannelNameHere;
 	private JTextField txtSetPasswordHere;
 	private JTextField txtLimit;
@@ -53,7 +53,7 @@ public class ChannelMenu extends JFrame {
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -64,14 +64,15 @@ public class ChannelMenu extends JFrame {
 				}
 			}
 		});
-	}
+	}*/
 
 	/**
 	 * Create the frame.
 	 * @throws IOException 
 	 */
-	public ChannelMenu() throws IOException {
-		main = new IRCMain("irc.freenode.net", new int[] {1024, 2048, 6667, 6669} , "", "newuser", "testingApp", "wildman");
+	public ChannelMenu(String host, String pass, String nick, String user, String real) throws IOException {
+		super(host);
+		main = new IRCMain(host, new int[] {1024, 2048, 6667, 6669} , pass, nick, user, real);
 		main.addIRCEventListener(internalList);
 		//main.addIRCEventListener(new IRCLocalListener());
 		setBounds(100, 100, 450, 540);
@@ -89,15 +90,11 @@ public class ChannelMenu extends JFrame {
 		list.setBounds(10, 10, 409, 212);
 		joinChannel.add(list);
 		
-		textField = new JTextField();
-		textField.setBounds(10, 228, 409, 37);
-		joinChannel.add(textField);
-		textField.setColumns(10);
-		
-		Button button = new Button("Join");
-		button.setFont(new Font("Arial Black", Font.BOLD, 20));
-		button.setBounds(10, 271, 121, 94);
-		joinChannel.add(button);
+		txtPleaseWaitConnecting = new JTextField();
+		txtPleaseWaitConnecting.setText("Please wait, connecting...");
+		txtPleaseWaitConnecting.setBounds(10, 228, 409, 37);
+		joinChannel.add(txtPleaseWaitConnecting);
+		txtPleaseWaitConnecting.setColumns(10);
 		
 		btnRefresh = new JButton("Refresh");
 		btnRefresh.addMouseListener(new MouseAdapter() {
@@ -106,8 +103,12 @@ public class ChannelMenu extends JFrame {
 				getChannelList();
 			}
 		});
-		btnRefresh.setBounds(137, 276, 89, 46);
+		btnRefresh.setBounds(10, 333, 89, 46);
 		joinChannel.add(btnRefresh);
+		
+		JButton btnJoin = new JButton("Join");
+		btnJoin.setBounds(10, 276, 89, 46);
+		joinChannel.add(btnJoin);
 		
 		Panel createChannel = new Panel();
 		tabbedPane.addTab("Create", null, createChannel, null);
@@ -217,13 +218,13 @@ public class ChannelMenu extends JFrame {
 		
 		
 	    public void onRegistered() {
-	      textField.setFont(new Font("Tahoma", Font.PLAIN, 11));
-	      textField.setText("Connected!  Type here to search for channels");
+	      txtPleaseWaitConnecting.setFont(new Font("Tahoma", Font.PLAIN, 11));
+	      txtPleaseWaitConnecting.setText("Connected!  Type here to search for channels");
 	    }
 
 	    public void onDisconnected() {
-	    	textField.setFont(new Font("Tahoma", Font.PLAIN, 11));
-	    	textField.setText("Disconnected from server");
+	    	txtPleaseWaitConnecting.setFont(new Font("Tahoma", Font.PLAIN, 11));
+	    	txtPleaseWaitConnecting.setText("Disconnected from server");
 	    }
 
 	    public void onError(String msg) {
@@ -281,7 +282,7 @@ public class ChannelMenu extends JFrame {
 	    	if(num == 323)
 	    		getChannelsFlag = false;
 	    	if(getChannelsFlag)
-	    		list.add(value);
+	    		list.add(value.replaceAll(main.getNick() + " ", ""));
 	    }
 
 	    public void onTopic(String chan, IRCUserInfo u, String topic) {
