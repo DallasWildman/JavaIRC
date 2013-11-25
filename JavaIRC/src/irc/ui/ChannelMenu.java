@@ -20,6 +20,7 @@ import javax.swing.JButton;
 
 import irc.core.IRCEventAdapter;
 import irc.core.IRCEventListener;
+import irc.core.IRCLocalListener;
 import irc.core.IRCMain;
 import irc.core.IRCModeParser;
 import irc.core.IRCUserInfo;
@@ -41,10 +42,13 @@ public class ChannelMenu extends JFrame {
 	private JCheckBox chckbxPrivChan;
 	private JCheckBox chckbxSecretChannelFlag;
 	private boolean initialClick = true;
+	private boolean getChannelsFlag;
+	private boolean startChannelsQuery;
 	private IRCMain main;
 	private Listener internalList = new Listener();
 	private List list;
 	private JButton btnRefresh;
+	private int numReturned;
 
 	/**
 	 * Launch the application.
@@ -67,8 +71,9 @@ public class ChannelMenu extends JFrame {
 	 * @throws IOException 
 	 */
 	public ChannelMenu() throws IOException {
-		main = new IRCMain("irc.freenode.net", new int[] {1024, 2048, 6667, 6669} , "", "newuser", "", "");
+		main = new IRCMain("irc.freenode.net", new int[] {1024, 2048, 6667, 6669} , "", "newuser", "testingApp", "wildman");
 		main.addIRCEventListener(internalList);
+		//main.addIRCEventListener(new IRCLocalListener());
 		setBounds(100, 100, 450, 540);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setLayout(new GridLayout(1, 1, 0, 0));
@@ -197,92 +202,94 @@ public class ChannelMenu extends JFrame {
 		if(!main.isConnected()){
 			list.add("Not Connected!");
 			return;}
-		long t = System.currentTimeMillis();
-		internalList.flush();
 		main.doList();
-		int liststart = -1;
-		while (liststart == -1)
-			liststart = internalList.result.indexOf("Reply #321");
-		int listend = -1;
-		while (listend == -1 || System.currentTimeMillis() < t + 5000)
-			listend = internalList.result.indexOf("Reply #323");
-		int index = liststart;
-		while (index < listend){
-			index = internalList.result.indexOf("Reply #322", index);
-			list.add(internalList.result.substring(index+2, internalList.result.indexOf(' ', index)));
+		long t = System.currentTimeMillis();
+		list.removeAll();
+		startChannelsQuery = true;
+		while(System.currentTimeMillis() < t + 15000 && getChannelsFlag){
+			list.repaint();
 		}
-		internalList.flush();
+		getChannelsFlag = false;
 		return;
 	}
 	
 	private class Listener extends IRCEventAdapter implements IRCEventListener {
-		protected String result = "";
+		
+		
 	    public void onRegistered() {
-	      result += "Connected\n";
+	      textField.setFont(new Font("Tahoma", Font.PLAIN, 11));
+	      textField.setText("Connected!  Type here to search for channels");
 	    }
-	    
+
 	    public void onDisconnected() {
-	      result += "Disconnected\n";
+	    	textField.setFont(new Font("Tahoma", Font.PLAIN, 11));
+	    	textField.setText("Disconnected from server");
 	    }
 
 	    public void onError(String msg) {
-	      result += "Error: "+ msg+"\n";
+	    	System.out.println(msg);
 	    }
 	    
 	    public void onError(int num, String msg) {
-	      result += "Error #"+ num +": "+ msg+"\n";
+	      //result += "Error #"+ num +": "+ msg+"\n";
 	    }
 
 	    public void onInvite(String chan, IRCUserInfo u, String nickPass) {
-	      result += chan +"> "+ u.getNick() +" invites "+ nickPass+"\n";
+	      //result += chan +"> "+ u.getNick() +" invites "+ nickPass+"\n";
 	    }
 
 	    public void onJoin(String chan, IRCUserInfo u) {
-	      result += chan +"> "+ u.getNick() +" joins"+"\n";
+	      //result += chan +"> "+ u.getNick() +" joins"+"\n";
 	    }
 	    
 	    public void onKick(String chan, IRCUserInfo u, String nickPass, String msg) {
-	      result += chan +"> "+ u.getNick() +" kicks "+ nickPass+"\n";
+	      //result += chan +"> "+ u.getNick() +" kicks "+ nickPass+"\n";
 	    }
 
 	    public void onMode(IRCUserInfo u, String nickPass, String mode) {
-	      result += "Mode: "+ u.getNick() +" sets modes "+ mode +" "+ 
-	          nickPass+"\n";
+	      //result += "Mode: "+ u.getNick() +" sets modes "+ mode +" "+ 
+	          //nickPass+"\n";
 	    }
 
 	    public void onMode(IRCUserInfo u, String chan, IRCModeParser mp) {
-	      result += chan +"> "+ u.getNick() +" sets mode: "+ mp.getLine()+"\n";
+	      //result += chan +"> "+ u.getNick() +" sets mode: "+ mp.getLine()+"\n";
 	    }
 
 	    public void onNick(IRCUserInfo u, String nickNew) {
-	    	result += "Nick: "+ u.getNick() +" is now known as "+ nickNew+"\n";
+	    	//result += "Nick: "+ u.getNick() +" is now known as "+ nickNew+"\n";
 	    }
 	    public void onNotice(String target, IRCUserInfo u, String msg) {
-	    	result += target +"> "+ u.getNick() +" (notice): "+ msg+"\n";
+	    	//result += target +"> "+ u.getNick() +" (notice): "+ msg+"\n";
 	    }
 
 	    public void onPart(String chan, IRCUserInfo u, String msg) {
-	    	result += chan +"> "+ u.getNick() +" parts"+"\n";
+	    	//result += chan +"> "+ u.getNick() +" parts"+"\n";
 	    }
 
 	    public void onPrivmsg(String chan, IRCUserInfo u, String msg) {
-	    	result += chan +"> "+ u.getNick() +": "+ msg+"\n";
+	    	//result += chan +"> "+ u.getNick() +": "+ msg+"\n";
 	    }
 
 	    public void onQuit(IRCUserInfo u, String msg) {
-	    	result += "Quit: "+ u.getNick()+"\n";
+	    	//result += "Quit: "+ u.getNick()+"\n";
 	    }
 
 	    public void onReply(int num, String value, String msg) {
-	    	result += "Reply #"+ num +": "+ value +" "+ msg+"\n";
+	    	//result += "Reply #"+ num +": "+ value +" "+ msg+"\n";
+	    	if(startChannelsQuery && num == 321){
+	    		getChannelsFlag = true; startChannelsQuery = false;}
+	    	if(num == 323)
+	    		getChannelsFlag = false;
+	    	if(getChannelsFlag)
+	    		list.add(value);
 	    }
 
 	    public void onTopic(String chan, IRCUserInfo u, String topic) {
-	    	result += chan +"> "+ u.getNick() +" changes topic into: "+ topic+"\n";
+	    	//result += chan +"> "+ u.getNick() +" changes topic into: "+ topic+"\n";
 	    }
 	    
 	    protected synchronized void flush(){
-	    	result = "";
+	    	//result = "";
 	    }
 	}
 }
