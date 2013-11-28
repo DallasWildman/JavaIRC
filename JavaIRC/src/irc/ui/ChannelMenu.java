@@ -1,32 +1,29 @@
 package irc.ui;
 
-import java.awt.EventQueue;
+import irc.core.IRCEventAdapter;
+import irc.core.IRCEventListener;
+import irc.core.IRCMain;
+import irc.core.IRCModeParser;
+import irc.core.IRCNumericReplies;
+import irc.core.IRCUserInfo;
 
-import javax.swing.JFrame;
-import javax.swing.JTabbedPane;
-import java.awt.Panel;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.List;
-import javax.swing.JTextField;
-import java.awt.Button;
-import java.awt.Font;
-import javax.swing.SwingConstants;
+import java.awt.Panel;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.util.ArrayList;
 
-import javax.swing.JCheckBox;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
-import irc.core.IRCEventAdapter;
-import irc.core.IRCEventListener;
-import irc.core.IRCLocalListener;
-import irc.core.IRCMain;
-import irc.core.IRCModeParser;
-import irc.core.IRCUserInfo;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-
+@SuppressWarnings("serial")
 public class ChannelMenu extends JFrame {
 	private JTextField txtPleaseWaitConnecting;
 	private JTextField txtChannelNameHere;
@@ -44,11 +41,16 @@ public class ChannelMenu extends JFrame {
 	private boolean initialClick = true;
 	private boolean getChannelsFlag;
 	private boolean startChannelsQuery;
+	private boolean isJoiningAChannel = false;
 	private IRCMain main;
 	private Listener internalList = new Listener();
 	private List list;
 	private JButton btnRefresh;
-	private int numReturned;
+	private ArrayList<ChatChannel> channels = new ArrayList<ChatChannel>();
+	private ArrayList<String> listConst = new ArrayList<String>();
+	private int numChannelFlag;
+	private BinarySemaphore guiSema = new BinarySemaphore(0);
+
 
 	/**
 	 * Launch the application.
@@ -78,42 +80,73 @@ public class ChannelMenu extends JFrame {
 		setBounds(100, 100, 450, 540);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setLayout(new GridLayout(1, 1, 0, 0));
-		
+
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		getContentPane().add(tabbedPane);
-		
+
 		Panel joinChannel = new Panel();
 		tabbedPane.addTab("Join", null, joinChannel, null);
 		joinChannel.setLayout(null);
-		
+
 		list = new List();
+		list.setMultipleMode(true);
 		list.setBounds(10, 10, 409, 212);
 		joinChannel.add(list);
-		
+
 		txtPleaseWaitConnecting = new JTextField();
 		txtPleaseWaitConnecting.setText("Please wait, connecting...");
 		txtPleaseWaitConnecting.setBounds(10, 228, 409, 37);
+		txtPleaseWaitConnecting.setEditable(false);
 		joinChannel.add(txtPleaseWaitConnecting);
 		txtPleaseWaitConnecting.setColumns(10);
-		
+
 		btnRefresh = new JButton("Refresh");
 		btnRefresh.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				getChannelList();
+				try {
+					getChannelList();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		});
 		btnRefresh.setBounds(10, 333, 89, 46);
 		joinChannel.add(btnRefresh);
-		
+
 		JButton btnJoin = new JButton("Join");
+		btnJoin.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				String[] selected = list.getSelectedItems();
+				System.out.println("Please wait...");
+				if(selected.length == 0){
+					System.out.println("Joining typed channel...");
+					isJoiningAChannel = true; numChannelFlag = 1;
+					main.doJoin("#" + txtPleaseWaitConnecting.getText());}
+				else
+					joinChannels(selected);
+			}
+
+			private void joinChannels(String[] selected){
+				System.out.println("Joining selected channels...");
+				String chanConcat = "";
+				numChannelFlag = selected.length;
+				for(int i = 0; i < selected.length; i++){
+					chanConcat += selected[i].split(" :")[0] + ", ";}
+				chanConcat = chanConcat.substring(0, chanConcat.length()-2);
+				System.out.println(chanConcat);
+				isJoiningAChannel = true;
+				main.doJoin(chanConcat);
+			}
+		});
 		btnJoin.setBounds(10, 276, 89, 46);
 		joinChannel.add(btnJoin);
-		
+
 		Panel createChannel = new Panel();
 		tabbedPane.addTab("Create", null, createChannel, null);
 		createChannel.setLayout(null);
-		
+
 		txtChannelNameHere = new JTextField();
 		txtChannelNameHere.addMouseListener(new MouseAdapter() {
 			@Override
@@ -128,169 +161,198 @@ public class ChannelMenu extends JFrame {
 		txtChannelNameHere.setBounds(10, 11, 409, 28);
 		createChannel.add(txtChannelNameHere);
 		txtChannelNameHere.setColumns(10);
-		
+
 		txtSetPasswordHere = new JTextField();
 		txtSetPasswordHere.setHorizontalAlignment(SwingConstants.CENTER);
 		txtSetPasswordHere.setText("set password here");
 		txtSetPasswordHere.setBounds(163, 255, 111, 20);
 		createChannel.add(txtSetPasswordHere);
 		txtSetPasswordHere.setColumns(10);
-		
+
 		txtLimit = new JTextField();
 		txtLimit.setHorizontalAlignment(SwingConstants.CENTER);
 		txtLimit.setText("limit");
 		txtLimit.setBounds(95, 203, 58, 20);
 		createChannel.add(txtLimit);
 		txtLimit.setColumns(10);
-		
+
 		chckbxPrivChan = new JCheckBox("private channel flag");
 		chckbxPrivChan.setBounds(10, 46, 121, 23);
 		createChannel.add(chckbxPrivChan);
-		
+
 		chckbxSecretChannelFlag = new JCheckBox("secret channel flag");
 		chckbxSecretChannelFlag.setBounds(10, 72, 121, 23);
 		createChannel.add(chckbxSecretChannelFlag);
-		
+
 		chckbxInviteOnly = new JCheckBox("invite only");
 		chckbxInviteOnly.setBounds(10, 98, 97, 23);
 		createChannel.add(chckbxInviteOnly);
-		
+
 		chckbxTopicSettableBy = new JCheckBox("topic settable by channelop only");
 		chckbxTopicSettableBy.setBounds(10, 124, 181, 23);
 		createChannel.add(chckbxTopicSettableBy);
-		
+
 		chckbxNoMessagesTo = new JCheckBox("no messages to channel from outside clients");
 		chckbxNoMessagesTo.setBounds(10, 150, 237, 23);
 		createChannel.add(chckbxNoMessagesTo);
-		
+
 		chckbxModerated = new JCheckBox("moderated");
 		chckbxModerated.setBounds(10, 176, 97, 23);
 		createChannel.add(chckbxModerated);
-		
+
 		chckbxSetUserLimit = new JCheckBox("set user limit");
 		chckbxSetUserLimit.setBounds(10, 202, 97, 23);
 		createChannel.add(chckbxSetUserLimit);
-		
+
 		chckbxSetBanMask = new JCheckBox("set ban mask to keep users out");
 		chckbxSetBanMask.setBounds(10, 230, 175, 23);
 		createChannel.add(chckbxSetBanMask);
-		
+
 		chckbxSetPasswordFor = new JCheckBox("set password for channel");
 		chckbxSetPasswordFor.setBounds(10, 254, 147, 23);
 		createChannel.add(chckbxSetPasswordFor);
-		
+
 		JButton btnCreate = new JButton("Create");
 		btnCreate.setBounds(29, 354, 162, 91);
 		createChannel.add(btnCreate);
 		main.connect();
 	}
-	
-	private boolean[] getCheckBoxFlags(){
-		boolean flags[] = null;
-		flags[0] = chckbxModerated.isSelected();
-		flags[1] = chckbxSetBanMask.isSelected();
-		flags[2] = chckbxNoMessagesTo.isSelected();
-		flags[3] = chckbxSetUserLimit.isSelected();
-		flags[4] = chckbxInviteOnly.isSelected();
-		flags[5] = chckbxSetPasswordFor.isSelected();
-		flags[6] = chckbxTopicSettableBy.isSelected();
-		flags[7] = chckbxPrivChan.isSelected();
-		flags[8] = chckbxSecretChannelFlag.isSelected();
-		return flags;
-	}
-	
-	private void getChannelList(){
+
+	private void getChannelList() throws InterruptedException{
 		if(!main.isConnected()){
-			list.add("Not Connected!");
+			System.out.println("Not Connected!");
 			return;}
+		System.out.println("Please wait, refreshing...");
+		list.removeAll();
+		//list.setVisible(false);
+		startChannelsQuery = true;
 		main.doList();
 		long t = System.currentTimeMillis();
-		list.removeAll();
-		startChannelsQuery = true;
-		while(System.currentTimeMillis() < t + 15000 && getChannelsFlag){
-			list.repaint();
-		}
+		while(System.currentTimeMillis() < t + 15000 && getChannelsFlag){}
 		getChannelsFlag = false;
+		//list.setVisible(true);
+		System.out.println("Done");
 		return;
 	}
-	
+
 	private class Listener extends IRCEventAdapter implements IRCEventListener {
+
+		public void onRegistered() {
+			txtPleaseWaitConnecting.setFont(new Font("Tahoma", Font.PLAIN, 11));
+			txtPleaseWaitConnecting.setText("Connected!  Type here to search for channels");
+			txtPleaseWaitConnecting.setEditable(true);
+		}
+
+		public void onDisconnected() {
+			txtPleaseWaitConnecting.setFont(new Font("Tahoma", Font.PLAIN, 11));
+			txtPleaseWaitConnecting.setText("Disconnected from server");
+			txtPleaseWaitConnecting.setEditable(false);
+		}
+
+		public void onError(String msg) {
+			System.out.println(msg);
+		}
+
+		public void onError(int num, String msg) {
+			System.out.println(msg);
+			switch(num){
+			case IRCNumericReplies.ERR_NEEDMOREPARAMS:
+			case IRCNumericReplies.ERR_INVITEONLYCHAN:
+			case IRCNumericReplies.ERR_CHANNELISFULL:
+			case IRCNumericReplies.ERR_NOSUCHCHANNEL:
+			case IRCNumericReplies.ERR_BADCHANNELKEY:
+			case IRCNumericReplies.ERR_BANNEDFROMCHAN:
+			case IRCNumericReplies.ERR_BADCHANMASK:
+				numChannelFlag--;
+				break;
+			case IRCNumericReplies.ERR_TOOMANYCHANNELS:
+				isJoiningAChannel = false;
+				System.out.println("Aborted.");
+			}
+			if(numChannelFlag == 0)
+				isJoiningAChannel = false;
+				System.out.println("Done.");
+		}
+
+		public void onInvite(String chan, IRCUserInfo u, String nickPass) {
+			System.out.println(chan +"> "+ u.getNick() +" invites "+ nickPass+"\n");
+		}
+
+		public void onJoin(String chan, IRCUserInfo u) {
+			//result += chan +"> "+ u.getNick() +" joins"+"\n";
+		}
+
+		public void onKick(String chan, IRCUserInfo u, String nickPass, String msg) {
+			System.out.println(chan +"> "+ u.getNick() +" kicks "+ nickPass+"\n");
+		}
+
+		public void onMode(IRCUserInfo u, String nickPass, String mode) {
+			System.out.println("Mode: "+ u.getNick() +" sets modes "+ mode +" "+ 
+					nickPass+"\n");
+		}
+
+		@SuppressWarnings("unused")
+		public void onMode(IRCUserInfo u, String chan, IRCModeParser mp) {
+			//result += chan +"> "+ u.getNick() +" sets mode: "+ mp.getLine()+"\n";
+		}
+
+		public void onNick(IRCUserInfo u, String nickNew) {
+			//result += "Nick: "+ u.getNick() +" is now known as "+ nickNew+"\n";
+		}
+		public void onNotice(String target, IRCUserInfo u, String msg) {
+			System.out.println(target +"> "+ u.getNick() +" (notice): "+ msg+"\n");
+		}
+
+		public void onPart(String chan, IRCUserInfo u, String msg) {
+			System.out.println(chan +"> "+ u.getNick() +" parts"+"\n");
+		}
+
+		public void onPrivmsg(String chan, IRCUserInfo u, String msg) {
+			System.out.println(chan +"> "+ u.getNick() +": "+ msg+"\n");
+		}
+
+		public void onQuit(IRCUserInfo u, String msg) {
+			//result += "Quit: "+ u.getNick()+"\n";
+		}
+
+		public void onReply(int num, String value, String msg) {
+			//result += "Reply #"+ num +": "+ value +" "+ msg+"\n";
+			switch(num){
+			case IRCNumericReplies.RPL_LISTSTART:
+				if(startChannelsQuery){
+					getChannelsFlag = true; startChannelsQuery = false;}
+				break;
+			case IRCNumericReplies.RPL_LIST:
+				if(getChannelsFlag){
+					String element = value.replaceAll(main.getNick() + " ", "").split(" ")[0];
+					msg = msg.trim().length() > 0 ? "Public" : "";
+					list.add(element + " :" + msg);}
+				break;
+			case IRCNumericReplies.RPL_LISTEND:
+				getChannelsFlag = false; break;
+			case IRCNumericReplies.RPL_TOPIC:
+				System.out.println("Topic received...");
+				channels.add(new ChatChannel(value, main, msg));
+				numChannelFlag--;
+				if(numChannelFlag == 0){
+					isJoiningAChannel = false;
+					System.out.println("Done.");}
+				break;
+			default:
+				System.out.println(value + ": " + msg);
+			}
+		}
 		
-		
-	    public void onRegistered() {
-	      txtPleaseWaitConnecting.setFont(new Font("Tahoma", Font.PLAIN, 11));
-	      txtPleaseWaitConnecting.setText("Connected!  Type here to search for channels");
-	    }
-
-	    public void onDisconnected() {
-	    	txtPleaseWaitConnecting.setFont(new Font("Tahoma", Font.PLAIN, 11));
-	    	txtPleaseWaitConnecting.setText("Disconnected from server");
-	    }
-
-	    public void onError(String msg) {
-	    	System.out.println(msg);
-	    }
-	    
-	    public void onError(int num, String msg) {
-	      //result += "Error #"+ num +": "+ msg+"\n";
-	    }
-
-	    public void onInvite(String chan, IRCUserInfo u, String nickPass) {
-	      //result += chan +"> "+ u.getNick() +" invites "+ nickPass+"\n";
-	    }
-
-	    public void onJoin(String chan, IRCUserInfo u) {
-	      //result += chan +"> "+ u.getNick() +" joins"+"\n";
-	    }
-	    
-	    public void onKick(String chan, IRCUserInfo u, String nickPass, String msg) {
-	      //result += chan +"> "+ u.getNick() +" kicks "+ nickPass+"\n";
-	    }
-
-	    public void onMode(IRCUserInfo u, String nickPass, String mode) {
-	      //result += "Mode: "+ u.getNick() +" sets modes "+ mode +" "+ 
-	          //nickPass+"\n";
-	    }
-
-	    public void onMode(IRCUserInfo u, String chan, IRCModeParser mp) {
-	      //result += chan +"> "+ u.getNick() +" sets mode: "+ mp.getLine()+"\n";
-	    }
-
-	    public void onNick(IRCUserInfo u, String nickNew) {
-	    	//result += "Nick: "+ u.getNick() +" is now known as "+ nickNew+"\n";
-	    }
-	    public void onNotice(String target, IRCUserInfo u, String msg) {
-	    	//result += target +"> "+ u.getNick() +" (notice): "+ msg+"\n";
-	    }
-
-	    public void onPart(String chan, IRCUserInfo u, String msg) {
-	    	//result += chan +"> "+ u.getNick() +" parts"+"\n";
-	    }
-
-	    public void onPrivmsg(String chan, IRCUserInfo u, String msg) {
-	    	//result += chan +"> "+ u.getNick() +": "+ msg+"\n";
-	    }
-
-	    public void onQuit(IRCUserInfo u, String msg) {
-	    	//result += "Quit: "+ u.getNick()+"\n";
-	    }
-
-	    public void onReply(int num, String value, String msg) {
-	    	//result += "Reply #"+ num +": "+ value +" "+ msg+"\n";
-	    	if(startChannelsQuery && num == 321){
-	    		getChannelsFlag = true; startChannelsQuery = false;}
-	    	if(num == 323)
-	    		getChannelsFlag = false;
-	    	if(getChannelsFlag)
-	    		list.add(value.replaceAll(main.getNick() + " ", ""));
-	    }
-
-	    public void onTopic(String chan, IRCUserInfo u, String topic) {
-	    	//result += chan +"> "+ u.getNick() +" changes topic into: "+ topic+"\n";
-	    }
-	    
-	    protected synchronized void flush(){
-	    	//result = "";
-	    }
+		//ZIS MEZZOD ITZ OOSLESSS!!!!
+		public void onTopic(String chan, IRCUserInfo u, String topic) {
+			System.out.println(chan + " " + u.getNick() + " " + topic);
+			if(isJoiningAChannel && u.getNick() == main.getNick()){
+				System.out.println("Topic received...");
+				channels.add(new ChatChannel(chan, main, topic));
+				numChannelFlag--;
+				if(numChannelFlag == 0){
+					isJoiningAChannel = false;
+					System.out.println("Done.");}}
+		}
 	}
 }
