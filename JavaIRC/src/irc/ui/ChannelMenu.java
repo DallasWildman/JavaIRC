@@ -15,6 +15,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -47,9 +48,7 @@ public class ChannelMenu extends JFrame {
 	private List list;
 	private JButton btnRefresh;
 	private ArrayList<ChatChannel> channels = new ArrayList<ChatChannel>();
-	private ArrayList<String> listConst = new ArrayList<String>();
 	private int numChannelFlag;
-	private BinarySemaphore guiSema = new BinarySemaphore(0);
 
 
 	/**
@@ -133,12 +132,11 @@ public class ChannelMenu extends JFrame {
 				String chanConcat = "";
 				numChannelFlag = selected.length;
 				for(int i = 0; i < selected.length; i++){
-					chanConcat += selected[i].split(" :")[0] + ", ";}
-				chanConcat = chanConcat.substring(0, chanConcat.length()-2);
+					chanConcat += selected[i].split(" :")[0] + ",";}
+				chanConcat = chanConcat.substring(0, chanConcat.length()-1);
 				System.out.println(chanConcat);
 				isJoiningAChannel = true;
-				main.doJoin(chanConcat);
-			}
+				main.doJoin(chanConcat);}
 		});
 		btnJoin.setBounds(10, 276, 89, 46);
 		joinChannel.add(btnJoin);
@@ -234,8 +232,15 @@ public class ChannelMenu extends JFrame {
 		System.out.println("Done");
 		return;
 	}
+	
+	protected void removeChannel(ChatChannel arg){
+		channels.remove(arg);
+	}
 
 	private class Listener extends IRCEventAdapter implements IRCEventListener {
+		private ArrayList<String> gatheredNameData = new ArrayList<String>();
+		private boolean gatheringNames;
+		private String namChannelGathered;
 
 		public void onRegistered() {
 			txtPleaseWaitConnecting.setFont(new Font("Tahoma", Font.PLAIN, 11));
@@ -244,7 +249,6 @@ public class ChannelMenu extends JFrame {
 		}
 
 		public void onDisconnected() {
-			txtPleaseWaitConnecting.setFont(new Font("Tahoma", Font.PLAIN, 11));
 			txtPleaseWaitConnecting.setText("Disconnected from server");
 			txtPleaseWaitConnecting.setEditable(false);
 		}
@@ -254,7 +258,7 @@ public class ChannelMenu extends JFrame {
 		}
 
 		public void onError(int num, String msg) {
-			System.out.println(msg);
+			System.out.println(num + ": " + msg);
 			switch(num){
 			case IRCNumericReplies.ERR_NEEDMOREPARAMS:
 			case IRCNumericReplies.ERR_INVITEONLYCHAN:
@@ -332,23 +336,37 @@ public class ChannelMenu extends JFrame {
 				getChannelsFlag = false; break;
 			case IRCNumericReplies.RPL_TOPIC:
 				System.out.println("Topic received...");
-				channels.add(new ChatChannel(value, main, msg));
-				numChannelFlag--;
+				if(isJoiningAChannel){
+					channels.add(new ChatChannel(value.replaceFirst(main.getNick() + " #", ""), main, msg, ChannelMenu.this));
+					numChannelFlag--;}
 				if(numChannelFlag == 0){
 					isJoiningAChannel = false;
 					System.out.println("Done.");}
 				break;
+			case IRCNumericReplies.RPL_NAMREPLY:
+				if(!gatheringNames){
+					gatheringNames = true;
+					gatheredNameData.clear();
+					namChannelGathered = value.split(" = #")[1];}
+				gatheredNameData.addAll(new ArrayList<String>(Arrays.asList(msg.split(" ")))); break;
+			case IRCNumericReplies.RPL_ENDOFNAMES:
+				System.out.println("Names done.");
+				for(ChatChannel window : channels){
+					if(namChannelGathered.equals(window.getChannelName())){
+						window.setUserList(gatheredNameData); break;}
+				}
+				gatheringNames = false; break;
 			default:
-				System.out.println(value + ": " + msg);
+				System.out.println(num + ": " + value + ": " + msg);
 			}
 		}
 		
-		//ZIS MEZZOD ITZ OOSLESSS!!!!
+		//This method is NOT called
 		public void onTopic(String chan, IRCUserInfo u, String topic) {
 			System.out.println(chan + " " + u.getNick() + " " + topic);
 			if(isJoiningAChannel && u.getNick() == main.getNick()){
 				System.out.println("Topic received...");
-				channels.add(new ChatChannel(chan, main, topic));
+				//channels.add(new ChatChannel(chan, main, topic));
 				numChannelFlag--;
 				if(numChannelFlag == 0){
 					isJoiningAChannel = false;

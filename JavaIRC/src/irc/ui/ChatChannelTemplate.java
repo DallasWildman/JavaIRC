@@ -2,24 +2,34 @@ package irc.ui;
 
 import irc.core.IRCEventAdapter;
 import irc.core.IRCEventListener;
+import irc.core.IRCMain;
 import irc.core.IRCModeParser;
+import irc.core.IRCNumericReplies;
 import irc.core.IRCUserInfo;
 
-import java.awt.EventQueue;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Collection;
+import java.util.Vector;
 
-import javax.swing.JFrame;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JTextArea;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.border.EtchedBorder;
 
+@SuppressWarnings("serial")
 public abstract class ChatChannelTemplate extends JFrame {
-	private JTextField textField;
+	private JTextArea messageField;
+	private JTextArea chatLog;
+	private JList<String> users;
+	private IRCMain main;
+	private String channelName;
+	private Vector<String> userList;
+	private ChannelMenu owningChanMen;
 
 	/**
 	 * For editing purposes only!
@@ -43,15 +53,31 @@ public abstract class ChatChannelTemplate extends JFrame {
 	 */
 	public ChatChannelTemplate() {
 		setBounds(100, 100, 800, 450);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
-		JTextArea textArea = new JTextArea();
-		textArea.setText("");
+		chatLog = new JTextArea();
+		chatLog.setEditable(false);
+		chatLog.setLineWrap(true);
+		chatLog.setText("");
 		
-		textField = new JTextField();
-		textField.setColumns(10);
+		messageField = new JTextArea();
+		messageField.setLineWrap(true);
+		messageField.setColumns(10);
 		
 		JButton btnSend = new JButton("Send");
+		btnSend.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				String written = messageField.getText();
+				main.doPrivmsg("#" + channelName, written);
+				chatLog.append("\nYou: " + written);
+				messageField.setText("");
+			}
+		});
+		
+		userList = new Vector<String>();
+		users = new JList<String>(userList);
+		users.setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -59,20 +85,27 @@ public abstract class ChatChannelTemplate extends JFrame {
 					.addContainerGap()
 					.addComponent(btnSend, GroupLayout.PREFERRED_SIZE, 116, GroupLayout.PREFERRED_SIZE)
 					.addGap(18)
-					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING, false)
-						.addComponent(textField, Alignment.LEADING)
-						.addComponent(textArea, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE))
-					.addContainerGap(101, Short.MAX_VALUE))
+					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+						.addComponent(messageField)
+						.addComponent(chatLog, GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE))
+					.addGap(18)
+					.addComponent(users, GroupLayout.DEFAULT_SIZE, 111, Short.MAX_VALUE)
+					.addContainerGap())
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGap(29)
-					.addComponent(textArea, GroupLayout.PREFERRED_SIZE, 256, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addComponent(btnSend, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
-						.addComponent(textField, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE))
+						.addGroup(groupLayout.createSequentialGroup()
+							.addGap(30)
+							.addComponent(users, GroupLayout.DEFAULT_SIZE, 0, Short.MAX_VALUE))
+						.addGroup(groupLayout.createSequentialGroup()
+							.addGap(29)
+							.addComponent(chatLog, GroupLayout.PREFERRED_SIZE, 256, GroupLayout.PREFERRED_SIZE)))
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+						.addComponent(messageField, GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
+						.addComponent(btnSend, GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE))
 					.addContainerGap())
 		);
 		getContentPane().setLayout(groupLayout);
@@ -80,6 +113,50 @@ public abstract class ChatChannelTemplate extends JFrame {
 	}
 	
 	
+	public String getChannelName() {
+		return channelName;
+	}
+
+
+	public void setChannelName(String channelName) {
+		this.channelName = channelName;
+	}
+
+
+	public IRCMain getMain() {
+		return main;
+	}
+
+
+	public void setMain(IRCMain main) {
+		this.main = main;
+	}
+	
+	public void setUserList(Collection<String> list){
+		userList.removeAllElements();
+		userList.addAll(list);
+		userList.remove(main.getNick());
+		users.setListData(userList);
+	}
+	
+	@Override
+	public void dispose(){
+		main.doPart("#"+channelName);
+		owningChanMen.remove(this);
+		super.dispose();
+	}
+
+
+	public ChannelMenu getOwningChanMen() {
+		return owningChanMen;
+	}
+
+
+	public void setOwningChanMen(ChannelMenu owningChanMen) {
+		this.owningChanMen = owningChanMen;
+	}
+
+
 	class Listener extends IRCEventAdapter implements IRCEventListener{
 		@Override
 		public void onRegistered() {
@@ -113,24 +190,24 @@ public abstract class ChatChannelTemplate extends JFrame {
 
 		@Override
 		public void onJoin(String chan, IRCUserInfo user) {
-			System.out.println("JOIN: "+ user.getNick() 
-			        +" joins "+ chan);
-			    // add the nickname to the nickname-table
+			if(chan.equals("#" + channelName))
+				userList.add(user.getNick());
 		}
 
 		@Override
 		public void onKick(String chan, IRCUserInfo user, String pNick,
 				String msg) {
-			System.out.println("KICK: "+ user.getNick() 
+			if(chan.equals("#" + channelName)){
+				userList.remove(pNick);
+				chatLog.append("\n"+ user.getNick() 
 			        +" kicks "+ pNick +"("+ msg +")");
-			    // remove the nickname from the nickname-table
+				users.setListData(userList);}
 		}
 
 		@Override
 		public void onMode(String chan, IRCUserInfo user, IRCModeParser modeParser) {
-			System.out.println("MODE: "+ user.getNick() 
-			        +" changes modes in "+ chan +": "+ modeParser.getLine());
-			    // some operations with the modes
+			if(chan.equals("#" + channelName))
+				chatLog.append("\n" + user.getNick() + " changes the mode: " + modeParser.getLine());
 		}
 
 		@Override
@@ -141,24 +218,26 @@ public abstract class ChatChannelTemplate extends JFrame {
 
 		@Override
 		public void onNick(IRCUserInfo user, String newNick) {
-			System.out.println("NICK: "+ user.getNick() 
-			        +" is now known as "+ newNick);
-			    // update the nickname in the nickname-table
+			userList.set(userList.indexOf(user.getNick()), newNick);
+			users.setListData(userList);
 		}
 
 
 		@Override
 		public void onPart(String chan, IRCUserInfo user, String msg) {
-			System.out.println("PART: "+ user.getNick() 
-			        +" parts from "+ chan +"("+ msg +")");
-			    // remove the nickname from the nickname-table
+			if(chan.equals("#" + channelName)){
+				userList.remove(user.getNick());
+				chatLog.append("\n" + user.getNick() + " has left the channel"); users.setListData(userList);}
 		}
 
 
 		@Override
-		public void onPrivmsg(String target, IRCUserInfo user, String msg) {
-			System.out.println("PRIVMSG: "+ user.getNick() 
-			        +" to "+ target +": "+ msg);
+		public void onPrivmsg(String chan, IRCUserInfo user, String msg) {
+			if(chan.equals("#"+channelName))
+				if(user.equals(main.getNick()))
+					chatLog.append("\nYou: "+ msg+"\n");
+				else
+					chatLog.append("\n" + user.getNick() +": "+ msg+"\n");
 		}
 
 		@Override
@@ -170,8 +249,16 @@ public abstract class ChatChannelTemplate extends JFrame {
 
 		@Override
 		public void onReply(int num, String value, String msg) {
-			System.out.println("Reply #"+ num +": Message: "+ 
-			        msg +" | Value: "+ value);
+			switch(num){
+			case IRCNumericReplies.RPL_NAMREPLY:
+				if(value.startsWith(main.getNick() + " = #"+channelName)){
+					userList.removeAllElements();
+					String [] users = msg.split(" ");
+					for(String item : users)
+						if(!item.equals(main.getNick()))
+							userList.add(item);
+					ChatChannelTemplate.this.users.setListData(userList);}
+			}
 		}
 
 		@Override
@@ -181,8 +268,11 @@ public abstract class ChatChannelTemplate extends JFrame {
 
 		@Override
 		public void onNotice(String target, IRCUserInfo user, String msg) {
-			// TODO Auto-generated method stub
-			
+			if(target.equals("#" + channelName))
+				if(user.equals(main.getNick()))
+					chatLog.append("\nNotice:" + msg.replaceFirst(main.getNick(), "You"));
+				else
+					chatLog.append("\nNotice:" + msg);
 		}
 
 		@Override
@@ -198,5 +288,4 @@ public abstract class ChatChannelTemplate extends JFrame {
 			
 		}
 	}
-
 }

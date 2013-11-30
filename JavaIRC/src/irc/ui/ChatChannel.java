@@ -2,21 +2,17 @@ package irc.ui;
 
 import irc.core.IRCMain;
 
+@SuppressWarnings("serial")
 public final class ChatChannel extends ChatChannelTemplate {
-	private IRCMain main;
-	private String channelName;
-	protected ChatChannel(String chanName, IRCMain main, String topic){
+	protected ChatChannel(String chanName, IRCMain main, String topic, ChannelMenu channelMenu){
 		super();
-		channelName = chanName;
+		setChannelName(chanName);
 		setTitle(topic);
 		main.addIRCEventListener(new Listener());
-		this.main = main;
+		setMain(main);
 		setVisible(true);
+		setOwningChanMen(channelMenu);
 	}
 	
-	@Override
-	public void dispose(){
-		main.doPart(channelName);
-		super.dispose();
-	}
+	
 }
