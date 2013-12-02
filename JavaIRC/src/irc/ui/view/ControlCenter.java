@@ -60,7 +60,8 @@ public class ControlCenter extends JDialog {
 	private JCheckBox chckbxTopicSettableBy; //Mode t: topic
 	private JCheckBox chckbxNoMessageTo; //Mode n: No message from outside
 	private JCheckBox chckbxModerated;  //Mode m: Moderated
-	private JCheckBox chckbxSetBanMask;  //Mode b: Banlist
+	private JCheckBox chckbxSetBanMask;
+	private JTextField txtBanMask;
 	
 	/**
 	 * Create the dialog.
@@ -89,48 +90,44 @@ public class ControlCenter extends JDialog {
 				.addGroup(gl_contentPanel.createSequentialGroup()
 					.addContainerGap()
 					.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-						.addComponent(panel_1, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
-						.addComponent(panel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 335, Short.MAX_VALUE))
+						.addComponent(panel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE)
+						.addComponent(panel_1, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE))
 					.addContainerGap())
 		);
 		gl_contentPanel.setVerticalGroup(
 			gl_contentPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPanel.createSequentialGroup()
 					.addContainerGap()
-					.addComponent(panel, GroupLayout.PREFERRED_SIZE, 101, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 275, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(34, Short.MAX_VALUE))
+					.addComponent(panel, GroupLayout.PREFERRED_SIZE, 126, GroupLayout.PREFERRED_SIZE)
+					.addGap(18)
+					.addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 243, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 		);
 		panel_1.setLayout(null);
 		
 		chckbxPrivateChannelFlag = new JCheckBox("Private Channel Flag");
-		chckbxPrivateChannelFlag.setBounds(6, 19, 323, 23);
+		chckbxPrivateChannelFlag.setBounds(6, 7, 323, 23);
 		panel_1.add(chckbxPrivateChannelFlag);
 		
 		chckbxSecretChannelFlag = new JCheckBox("Secret Channel Flag");
-		chckbxSecretChannelFlag.setBounds(6, 54, 323, 23);
+		chckbxSecretChannelFlag.setBounds(6, 42, 323, 23);
 		panel_1.add(chckbxSecretChannelFlag);
 		
 		chckbxInviteOnly = new JCheckBox("Invite Only");
-		chckbxInviteOnly.setBounds(6, 89, 323, 23);
+		chckbxInviteOnly.setBounds(6, 77, 323, 23);
 		panel_1.add(chckbxInviteOnly);
 		
 		chckbxTopicSettableBy = new JCheckBox("Topic Settable by Channelop Only");
-		chckbxTopicSettableBy.setBounds(6, 127, 323, 23);
+		chckbxTopicSettableBy.setBounds(6, 115, 323, 23);
 		panel_1.add(chckbxTopicSettableBy);
 		
 		chckbxNoMessageTo = new JCheckBox("No Message to Channel from Outside Clients");
-		chckbxNoMessageTo.setBounds(6, 162, 323, 23);
+		chckbxNoMessageTo.setBounds(6, 150, 323, 23);
 		panel_1.add(chckbxNoMessageTo);
 		
 		chckbxModerated = new JCheckBox("Moderated");
-		chckbxModerated.setBounds(6, 197, 323, 23);
+		chckbxModerated.setBounds(6, 185, 323, 23);
 		panel_1.add(chckbxModerated);
-		
-		chckbxSetBanMask = new JCheckBox("Set Ban Mask to Keep Users Out");
-		chckbxSetBanMask.setBounds(6, 232, 323, 23);
-		panel_1.add(chckbxSetBanMask);
 		panel.setLayout(null);
 		
 		JCheckBox chckbxNewCheckBox = new JCheckBox("Set User Limit: ");
@@ -138,7 +135,7 @@ public class ControlCenter extends JDialog {
 		panel.add(chckbxNewCheckBox);
 		
 		JCheckBox chckbxSetPasswordFor = new JCheckBox("Set Password For Channel: ");
-		chckbxSetPasswordFor.setBounds(6, 60, 207, 23);
+		chckbxSetPasswordFor.setBounds(6, 60, 159, 23);
 		panel.add(chckbxSetPasswordFor);
 		
 		txtLimit = new JTextField();
@@ -150,8 +147,18 @@ public class ControlCenter extends JDialog {
 		txtPassword = new JTextField();
 		txtPassword.setText("Password");
 		txtPassword.setColumns(10);
-		txtPassword.setBounds(207, 58, 122, 28);
+		txtPassword.setBounds(179, 57, 122, 28);
 		panel.add(txtPassword);
+		
+		chckbxSetBanMask = new JCheckBox("Set ban mask:");
+		chckbxSetBanMask.setBounds(6, 96, 97, 23);
+		panel.add(chckbxSetBanMask);
+		
+		txtBanMask = new JTextField();
+		txtBanMask.setText("ban mask");
+		txtBanMask.setBounds(128, 94, 86, 23);
+		panel.add(txtBanMask);
+		txtBanMask.setColumns(10);
 		contentPanel.setLayout(gl_contentPanel);
 		{
 			JPanel buttonPane = new JPanel();
