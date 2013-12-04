@@ -62,6 +62,8 @@ public class ControlCenter extends JDialog {
 	private JCheckBox chckbxModerated;  //Mode m: Moderated
 	private JCheckBox chckbxSetBanMask;
 	private JTextField txtBanMask;
+	private JCheckBox chckbxUserLimit;
+	private JCheckBox chckbxSetPasswordFor;
 	
 	/**
 	 * Create the dialog.
@@ -130,11 +132,11 @@ public class ControlCenter extends JDialog {
 		panel_1.add(chckbxModerated);
 		panel.setLayout(null);
 		
-		JCheckBox chckbxNewCheckBox = new JCheckBox("Set User Limit: ");
-		chckbxNewCheckBox.setBounds(6, 18, 128, 23);
-		panel.add(chckbxNewCheckBox);
+		chckbxUserLimit = new JCheckBox("Set User Limit: ");
+		chckbxUserLimit.setBounds(6, 18, 128, 23);
+		panel.add(chckbxUserLimit);
 		
-		JCheckBox chckbxSetPasswordFor = new JCheckBox("Set Password For Channel: ");
+		chckbxSetPasswordFor = new JCheckBox("Set Password For Channel: ");
 		chckbxSetPasswordFor.setBounds(6, 60, 159, 23);
 		panel.add(chckbxSetPasswordFor);
 		
@@ -208,7 +210,85 @@ public class ControlCenter extends JDialog {
 	// -------------------------------
 
 	private void generateModes() {
-		//TODO: generate modes to channel according to selected checkbox
+		String modes = "";
+		String users = "";
+		String masks = "";
+		char lastOp = '\0';
+		if(chckbxPrivateChannelFlag.isSelected()){
+			if(chckbxPrivateChannelFlag.getText().contains("Enable")){
+				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
+			else if(chckbxPrivateChannelFlag.getText().contains("Disable")){
+				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+			modes += 'p';}
+		if(chckbxSecretChannelFlag.isSelected()){
+			if(chckbxSecretChannelFlag.getText().contains("Enable")){
+				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
+			else if(chckbxSecretChannelFlag.getText().contains("Disable")){
+				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+			modes += 's';}
+		if(chckbxModerated.isSelected()){
+			if(chckbxModerated.getText().contains("Enable")){
+				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
+			else if(chckbxModerated.getText().contains("Disable")){
+				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+			modes += 'm';}
+		if(chckbxNoMessageTo.isSelected()){
+			if(chckbxNoMessageTo.getText().contains("Enable")){
+				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
+			else if(chckbxNoMessageTo.getText().contains("Disable")){
+				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+			modes += 'n';}
+		if(chckbxTopicSettableBy.isSelected()){
+			if(chckbxTopicSettableBy.getText().contains("Enable")){
+				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
+			else if(chckbxTopicSettableBy.getText().contains("Disable")){
+				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+			modes += 't';}
+		if(chckbxInviteOnly.isSelected()){
+			if(chckbxInviteOnly.getText().contains("Enable")){
+				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
+			else if(chckbxInviteOnly.getText().contains("Disable")){
+				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+			modes += 'i';}
+		/*for(Component item : chanOpSelector.getComponents())
+			if(((JCheckBoxMenuItem) item).isSelected()){
+				String [] nick = ((AbstractButton) item).getText().split(" ");
+				if(nick[0].startsWith("@")){
+					modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+				else{
+					modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
+				users += nick[0];}
+		if(voiceSelector.isEnabled()){
+			String [] nick;
+			for(Component item : voiceSelector.getComponents())
+				if(((JCheckBoxMenuItem) item).isSelected()){
+					nick = ((AbstractButton) item).getText().split(" ");
+					if(nick[nick.length].equals("Unmuted")){
+						modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+					else{
+						modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
+					users += nick[0];}}
+		String banModeString = "";
+		for(Component item : banMask.getComponents())
+			if(item instanceof JMenuItem && item != mntmAddBanMasks){
+				masks += ((AbstractButton) item).getText(); banModeString += 'b';
+			}else
+				continue;
+		modes += (banModeString.isEmpty() ? "" : '+' + banModeString);
+		banModeString = "";
+		for(Component item : mnRemoveBanMasks.getComponents())
+			masks += ((AbstractButton) item).getText(); banModeString += 'b';
+			modes += (banModeString.isEmpty() ? "" : '-' + banModeString);*/
+		//int userLimitInput = chckbxUserLimit.isSelected() ? Integer.parseInt(txtLimit.getText()) : -1;
+		mainFrame.getIRCConnection().doMode(modes /* + (userLimitInput == -1 ? " " : " " + userLimitInput + " ") + users + masks +
+				(chckbxSetPasswordFor.isSelected() ? " " + txtPassword.getText() : "")*/);
+
 	}
 	
+	protected JCheckBox getChckbxUserLimit() {
+		return chckbxUserLimit;
+	}
+	public JCheckBox getChckbxSetPasswordFor() {
+		return chckbxSetPasswordFor;
+	}
 }

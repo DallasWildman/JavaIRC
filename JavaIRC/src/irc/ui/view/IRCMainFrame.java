@@ -142,6 +142,7 @@ public class IRCMainFrame extends JFrame implements Runnable {
 	private JMenuItem mntmChangeNick;
 	private JMenuItem mntmWhois;
 	private JMenuItem mntmControlCenter;
+	private JMenuItem mntmListChannels;
 	
 	// -------------------------------
 	// Getters and Setters
@@ -459,6 +460,10 @@ public class IRCMainFrame extends JFrame implements Runnable {
 		mntmJoin.setIcon(new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")));
 		mnOptions.add(mntmJoin);
 		
+		mntmListChannels = new JMenuItem("List channels");
+		mntmListChannels.setIcon(new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")));
+		mnOptions.add(mntmListChannels);
+		
 		mntmPart = new JMenuItem("Part");
 		mntmPart.setIcon(new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_go.png")));
 		mnOptions.add(mntmPart);
@@ -576,10 +581,19 @@ public class IRCMainFrame extends JFrame implements Runnable {
 		/* MenuBar -> Options -> Join */
 		mntmJoin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String input = JOptionPane.showInputDialog(null, "Enter the Channel Name to Join: ");
-				if(isConnected() && input != null)
-					conn.doJoin(input);
-			}
+				if(isConnected()){ 
+					String input = JOptionPane.showInputDialog(IRCMainFrame.this, "Enter the Channel Name to Join: ");
+					if(input != null)
+						conn.doJoin(input);
+				}}
+		});
+		
+		/*MenuBar -> Options -> List channels*/
+		mntmListChannels.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(isConnected()){ 
+					conn.doList();
+				}}
 		});
 		
 		/* MenuBar -> Options -> Part */

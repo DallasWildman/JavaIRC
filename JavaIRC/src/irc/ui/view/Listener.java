@@ -2,6 +2,8 @@ package irc.ui.view;
 
 import java.awt.Component;
 import java.util.*;
+
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import irc.core.*;
 
@@ -50,6 +52,11 @@ public class Listener extends IRCEventAdapter implements IRCEventListener {
     mainFrame = owner;
     conn = owner.getIRCConnection();
   }
+  
+  /*
+   * Special field for collecting LIST data
+   */
+  ArrayList<String> listOut = new ArrayList<String>();
 
   //-------------------------------
   // Listenning Events
@@ -526,13 +533,32 @@ public class Listener extends IRCEventAdapter implements IRCEventListener {
         mainFrame.setNick(nickNew);
       nickChecked = true; // don't check & cut anymore
     }
+    
+	// <MRW> List command sent start constructing a list
+	if(num == IRCNumericReplies.RPL_LISTSTART)
+		listOut.clear();
 
-    // print out info to console
-    String line;
-    line = "* Reply: #"+ num +": Msg: "+ msg; 
-    mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, line);
-    line = "* Reply: #"+ num +": Value: "+ value;
-    mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, line);
+    // print out info to console <MRW>(Unless a list command is sent)
+    if(num != IRCNumericReplies.RPL_LIST){
+    	String line;
+    	line = "* Reply: #"+ num +": Msg: "+ msg; 
+    	mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, line);
+    	line = "* Reply: #"+ num +": Value: "+ value;
+    	mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, line);}
+    else{
+    	//mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, value);
+    	listOut.add(value.substring(value.indexOf(' ')));
+    }
+    
+    //<MRW> Show a dialog featuring the list of channels.
+    if(num == IRCNumericReplies.RPL_LISTEND){
+    	String input = (String) JOptionPane.showInputDialog(mainFrame, "", "Choose From a list of channels",
+    			JOptionPane.PLAIN_MESSAGE, new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")),
+    			listOut.toArray(), listOut.get(0));
+    	if(mainFrame.isConnected() && input != null)
+    		conn.doJoin(input.split(" ")[1]);
+    }
+    
   }
 
 // ------------------------------
