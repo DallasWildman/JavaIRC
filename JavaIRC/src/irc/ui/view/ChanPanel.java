@@ -22,7 +22,7 @@ public class ChanPanel extends PanelTemplate implements ActionListener {
   private JPopupMenu nicklistPopup = getNicklistPopupMenu();
 
    //* The arraylist which saves the list of banmask. 
-  private ArrayList banlist = new ArrayList();
+  private ArrayList<String> banlist = new ArrayList<String>();
 
    //* Represents the actual modes of the channel.<br />
   private StringBuffer modebuffer = new StringBuffer();

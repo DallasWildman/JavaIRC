@@ -16,6 +16,7 @@ import javax.swing.BoxLayout;
 
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.JCheckBox;
 import javax.swing.GroupLayout;
@@ -26,6 +27,9 @@ import javax.swing.JRadioButton;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.JList;
 
 public class ControlCenter extends JDialog {
 	
@@ -41,9 +45,9 @@ public class ControlCenter extends JDialog {
 	
 	/* The ArrayList which contains the ban-list */
 	/* NOT SUPPORTED BY OUR SERVER AT THIS TIME*/
-	private ArrayList banlist;
-	private ArrayList banlistToRemove = new ArrayList();
-	private ArrayList banlistToAdd = new ArrayList();
+	private ArrayList<String> banlist;
+	private ArrayList<String> banlistToRemove = new ArrayList<String>();
+	private ArrayList<String> banlistToAdd = new ArrayList<String>();
 	
 	/* IRC Channel mode parser */
 	private IRCModeParser modeParser;
@@ -61,14 +65,18 @@ public class ControlCenter extends JDialog {
 	private JCheckBox chckbxNoMessageTo; //Mode n: No message from outside
 	private JCheckBox chckbxModerated;  //Mode m: Moderated
 	private JCheckBox chckbxSetBanMask;
-	private JTextField txtBanMask;
 	private JCheckBox chckbxUserLimit;
 	private JCheckBox chckbxSetPasswordFor;
 	
+	private boolean flags[] = new boolean[6];
+	
+	private JLabel lblChooseModesTo;
+	private JTextField txtBanMask;
+	private JList<String> removeBanList;
 	/**
 	 * Create the dialog.
 	 */
-	public ControlCenter(IRCMainFrame pOwner, String pChan, int pCount, int pOperCount, ArrayList pBanList, String modes) {
+	public ControlCenter(IRCMainFrame pOwner, String pChan, int pCount, int pOperCount, ArrayList<String> pBanList, String modes) {
 		
 		super(pOwner, true);
 		setTitle("Control Center");
@@ -78,7 +86,7 @@ public class ControlCenter extends JDialog {
 		this.banlist = pBanList;
 		this.modeParser = new IRCModeParser(modes);
 		
-		setBounds(100, 100, 357, 462);
+		setBounds(100, 100, 357, 677);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -86,14 +94,17 @@ public class ControlCenter extends JDialog {
 		JPanel panel = new JPanel();
 		
 		JPanel panel_1 = new JPanel();
+		
+		JPanel panel_2 = new JPanel();
 		GroupLayout gl_contentPanel = new GroupLayout(contentPanel);
 		gl_contentPanel.setHorizontalGroup(
 			gl_contentPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_contentPanel.createSequentialGroup()
+				.addGroup(Alignment.TRAILING, gl_contentPanel.createSequentialGroup()
 					.addContainerGap()
-					.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-						.addComponent(panel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE)
-						.addComponent(panel_1, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE))
+					.addGroup(gl_contentPanel.createParallelGroup(Alignment.TRAILING)
+						.addComponent(panel_2, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE)
+						.addComponent(panel, GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE)
+						.addComponent(panel_1, GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE))
 					.addContainerGap())
 		);
 		gl_contentPanel.setVerticalGroup(
@@ -103,33 +114,66 @@ public class ControlCenter extends JDialog {
 					.addComponent(panel, GroupLayout.PREFERRED_SIZE, 126, GroupLayout.PREFERRED_SIZE)
 					.addGap(18)
 					.addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 243, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(panel_2, GroupLayout.DEFAULT_SIZE, 101, Short.MAX_VALUE))
 		);
+		
+		JLabel lblRemoveBanMasks = new JLabel("Remove ban masks:");
+		
+		JScrollPane scrollPane = new JScrollPane();
+		GroupLayout gl_panel_2 = new GroupLayout(panel_2);
+		gl_panel_2.setHorizontalGroup(
+			gl_panel_2.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_panel_2.createSequentialGroup()
+					.addGroup(gl_panel_2.createParallelGroup(Alignment.LEADING)
+						.addComponent(lblRemoveBanMasks)
+						.addGroup(gl_panel_2.createSequentialGroup()
+							.addGap(10)
+							.addComponent(scrollPane, GroupLayout.PREFERRED_SIZE, 135, GroupLayout.PREFERRED_SIZE)))
+					.addContainerGap(166, Short.MAX_VALUE))
+		);
+		gl_panel_2.setVerticalGroup(
+			gl_panel_2.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_panel_2.createSequentialGroup()
+					.addComponent(lblRemoveBanMasks)
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
+					.addContainerGap())
+		);
+		
+		removeBanList = new JList<String>();
+		removeBanList.setListData(Arrays.copyOf(banlist.toArray(), banlist.toArray().length, String[].class));
+		scrollPane.setViewportView(removeBanList);
+		panel_2.setLayout(gl_panel_2);
 		panel_1.setLayout(null);
 		
 		chckbxPrivateChannelFlag = new JCheckBox("Private Channel Flag");
-		chckbxPrivateChannelFlag.setBounds(6, 7, 323, 23);
+		chckbxPrivateChannelFlag.setBounds(6, 22, 323, 23);
 		panel_1.add(chckbxPrivateChannelFlag);
 		
 		chckbxSecretChannelFlag = new JCheckBox("Secret Channel Flag");
-		chckbxSecretChannelFlag.setBounds(6, 42, 323, 23);
+		chckbxSecretChannelFlag.setBounds(6, 57, 323, 23);
 		panel_1.add(chckbxSecretChannelFlag);
 		
 		chckbxInviteOnly = new JCheckBox("Invite Only");
-		chckbxInviteOnly.setBounds(6, 77, 323, 23);
+		chckbxInviteOnly.setBounds(6, 92, 323, 23);
 		panel_1.add(chckbxInviteOnly);
 		
 		chckbxTopicSettableBy = new JCheckBox("Topic Settable by Channelop Only");
-		chckbxTopicSettableBy.setBounds(6, 115, 323, 23);
+		chckbxTopicSettableBy.setBounds(6, 130, 323, 23);
 		panel_1.add(chckbxTopicSettableBy);
 		
 		chckbxNoMessageTo = new JCheckBox("No Message to Channel from Outside Clients");
-		chckbxNoMessageTo.setBounds(6, 150, 323, 23);
+		chckbxNoMessageTo.setBounds(6, 165, 323, 23);
 		panel_1.add(chckbxNoMessageTo);
 		
 		chckbxModerated = new JCheckBox("Moderated");
-		chckbxModerated.setBounds(6, 185, 323, 23);
+		chckbxModerated.setBounds(6, 200, 323, 23);
 		panel_1.add(chckbxModerated);
+		
+		lblChooseModesTo = new JLabel("Choose modes to toggle:");
+		lblChooseModesTo.setBounds(6, 0, 120, 14);
+		panel_1.add(lblChooseModesTo);
 		panel.setLayout(null);
 		
 		chckbxUserLimit = new JCheckBox("Set User Limit: ");
@@ -152,7 +196,7 @@ public class ControlCenter extends JDialog {
 		txtPassword.setBounds(179, 57, 122, 28);
 		panel.add(txtPassword);
 		
-		chckbxSetBanMask = new JCheckBox("Set ban mask:");
+		chckbxSetBanMask = new JCheckBox("Add ban mask:");
 		chckbxSetBanMask.setBounds(6, 96, 97, 23);
 		panel.add(chckbxSetBanMask);
 		
@@ -202,6 +246,38 @@ public class ControlCenter extends JDialog {
 	    int x = (screenSize.width - mySize.width)/2;
 	    int y = (screenSize.height - mySize.height)/2;
 	    setLocation(x, y);
+	    //<MRW> Constructs the checkbox labels based on the mode recieved.
+	    for(int i=1; i <= modeParser.getCount(); i++){
+	    	boolean toggle;
+	    	switch(modeParser.getOperatorAt(i)){
+	    	case '+':
+	    		toggle = true; break;
+	    	case '-':
+	    		toggle = false; break;
+	    	default:
+	    		throw new IllegalArgumentException("Invalid operator");	
+	    	}
+	    	switch(modeParser.getModeAt(i)){
+	    	case 'i':
+	    		flags[0] = toggle; break;
+	    	case 'p':
+	    		flags[1] = toggle; break;
+	    	case 's':
+	    		flags[2] = toggle; break;
+	    	case 'n':
+	    		flags[3] = toggle; break;
+	    	case 'm':
+	    		flags[4] = toggle; break;
+	    	case 't':
+	    		flags[5] = toggle; break;
+	    	case 'k':
+	    		chckbxSetPasswordFor.setSelected(toggle); txtPassword.setEditable(!toggle);
+	    		txtPassword.setText(modeParser.getArgAt(i)); break;
+	    	case 'l':
+	    		chckbxUserLimit.setSelected(toggle); txtLimit.setEditable(toggle);
+	    		txtLimit.setText(modeParser.getArgAt(i)); break;
+	    	}
+	    }
 	    setVisible(true);
 	}
 	
@@ -209,80 +285,74 @@ public class ControlCenter extends JDialog {
 	// Private Methods
 	// -------------------------------
 
+	/*
+	 * <MRW> This method sends the mode command based on the user's selections.
+	 */
 	private void generateModes() {
 		String modes = "";
 		String users = "";
 		String masks = "";
+		String password = "";
 		char lastOp = '\0';
 		if(chckbxPrivateChannelFlag.isSelected()){
-			if(chckbxPrivateChannelFlag.getText().contains("Enable")){
+			if(!flags[1]){
 				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
-			else if(chckbxPrivateChannelFlag.getText().contains("Disable")){
+			else{
 				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
 			modes += 'p';}
 		if(chckbxSecretChannelFlag.isSelected()){
-			if(chckbxSecretChannelFlag.getText().contains("Enable")){
+			if(!flags[2]){
 				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
-			else if(chckbxSecretChannelFlag.getText().contains("Disable")){
+			else{
 				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
 			modes += 's';}
 		if(chckbxModerated.isSelected()){
-			if(chckbxModerated.getText().contains("Enable")){
+			if(!flags[4]){
 				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
-			else if(chckbxModerated.getText().contains("Disable")){
+			else{
 				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
 			modes += 'm';}
 		if(chckbxNoMessageTo.isSelected()){
-			if(chckbxNoMessageTo.getText().contains("Enable")){
+			if(!flags[3]){
 				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
-			else if(chckbxNoMessageTo.getText().contains("Disable")){
+			else{
 				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
 			modes += 'n';}
 		if(chckbxTopicSettableBy.isSelected()){
-			if(chckbxTopicSettableBy.getText().contains("Enable")){
+			if(!flags[5]){
 				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
-			else if(chckbxTopicSettableBy.getText().contains("Disable")){
+			else{
 				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
 			modes += 't';}
 		if(chckbxInviteOnly.isSelected()){
-			if(chckbxInviteOnly.getText().contains("Enable")){
+			if(!flags[0]){
 				modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
-			else if(chckbxInviteOnly.getText().contains("Disable")){
+			else{
 				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
 			modes += 'i';}
-		/*for(Component item : chanOpSelector.getComponents())
-			if(((JCheckBoxMenuItem) item).isSelected()){
-				String [] nick = ((AbstractButton) item).getText().split(" ");
-				if(nick[0].startsWith("@")){
-					modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
-				else{
-					modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
-				users += nick[0];}
-		if(voiceSelector.isEnabled()){
-			String [] nick;
-			for(Component item : voiceSelector.getComponents())
-				if(((JCheckBoxMenuItem) item).isSelected()){
-					nick = ((AbstractButton) item).getText().split(" ");
-					if(nick[nick.length].equals("Unmuted")){
-						modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
-					else{
-						modes += lastOp == '+' ? "" : '+'; lastOp = '+';}
-					users += nick[0];}}
-		String banModeString = "";
-		for(Component item : banMask.getComponents())
-			if(item instanceof JMenuItem && item != mntmAddBanMasks){
-				masks += ((AbstractButton) item).getText(); banModeString += 'b';
-			}else
-				continue;
-		modes += (banModeString.isEmpty() ? "" : '+' + banModeString);
-		banModeString = "";
-		for(Component item : mnRemoveBanMasks.getComponents())
-			masks += ((AbstractButton) item).getText(); banModeString += 'b';
-			modes += (banModeString.isEmpty() ? "" : '-' + banModeString);*/
-		//int userLimitInput = chckbxUserLimit.isSelected() ? Integer.parseInt(txtLimit.getText()) : -1;
-		mainFrame.getIRCConnection().doMode(modes /* + (userLimitInput == -1 ? " " : " " + userLimitInput + " ") + users + masks +
-				(chckbxSetPasswordFor.isSelected() ? " " + txtPassword.getText() : "")*/);
-
+		String limit = "";
+		if(chckbxUserLimit.isSelected() ^ txtLimit.isEditable()){
+			if(chckbxUserLimit.isSelected()){
+				modes += lastOp == '+' ? "" : '+'; lastOp = '+'; limit = txtLimit.getText() + " ";}
+			else{
+				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+			modes += 'k';}
+		if(chckbxSetPasswordFor.isSelected() ^ txtPassword.isEditable()){
+			if(chckbxSetPasswordFor.isSelected()){
+				modes += lastOp == '+' ? "" : '+'; lastOp = '+'; password = txtPassword.getText();}
+			else{
+				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+			modes += 'k';}
+		String banMask = "";
+		if(chckbxSetBanMask.isSelected()){
+			modes += lastOp == '+' ? "" : '+'; lastOp = '+'; banMask = txtBanMask.getText();}
+		java.util.List<String> removeSelected = removeBanList.getSelectedValuesList();
+		if(!removeSelected.isEmpty()){
+			modes += lastOp == '-' ? "" : '-';
+			for(String item : removeSelected){
+				modes += 'b'; banMask += item + " ";}
+		}
+		mainFrame.getIRCConnection().doMode(chan, modes + " "+ limit + banMask + password);
 	}
 	
 	protected JCheckBox getChckbxUserLimit() {
@@ -290,5 +360,8 @@ public class ControlCenter extends JDialog {
 	}
 	public JCheckBox getChckbxSetPasswordFor() {
 		return chckbxSetPasswordFor;
+	}
+	protected JList getRemoveBanList() {
+		return removeBanList;
 	}
 }
