@@ -268,7 +268,7 @@ public class ChanPanel extends PanelTemplate implements ActionListener {
 
   /** 
    * Removes a banmask from the Arraylist. 
-   * @param banmask The banmask which is to remove.
+   * @param banmask The banmask which is to be removed.
    */
   public void removeBan(String banmask) {
     String[] bans = new String[banlist.size()];

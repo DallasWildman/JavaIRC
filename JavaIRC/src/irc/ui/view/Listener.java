@@ -266,10 +266,10 @@ public class Listener extends IRCEventAdapter implements IRCEventListener {
       } else if (mode == 'b') {
         if (operator == '+') {
         //TODO: BAN
-          //mainFrame.addBan(index, arg, nickAct, System.currentTimeMillis());
+          mainFrame.addBan(index, arg, nickAct, System.currentTimeMillis());
         } else if (operator == '-') {
         	//TODO: BAN
-          //mainFrame.removeBan(index, arg);
+          mainFrame.removeBan(index, arg);
         }
       } else if (mode == 'i' || mode == 'k' || mode == 'l' || mode == 'm' 
           || mode == 'n' || mode == 'p' || mode == 's' || mode == 't') { 

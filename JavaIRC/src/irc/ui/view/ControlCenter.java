@@ -155,7 +155,7 @@ public class ControlCenter extends JDialog {
 		chckbxSecretChannelFlag.setBounds(6, 57, 323, 23);
 		panel_1.add(chckbxSecretChannelFlag);
 		
-		chckbxInviteOnly = new JCheckBox("Invite Only");
+		chckbxInviteOnly = new JCheckBox("Invite Only Flag");
 		chckbxInviteOnly.setBounds(6, 92, 323, 23);
 		panel_1.add(chckbxInviteOnly);
 		
@@ -163,7 +163,7 @@ public class ControlCenter extends JDialog {
 		chckbxTopicSettableBy.setBounds(6, 130, 323, 23);
 		panel_1.add(chckbxTopicSettableBy);
 		
-		chckbxNoMessageTo = new JCheckBox("No Message to Channel from Outside Clients");
+		chckbxNoMessageTo = new JCheckBox("Messages to channel from outside clients");
 		chckbxNoMessageTo.setBounds(6, 165, 323, 23);
 		panel_1.add(chckbxNoMessageTo);
 		
@@ -331,28 +331,28 @@ public class ControlCenter extends JDialog {
 				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
 			modes += 'i';}
 		String limit = "";
-		if(chckbxUserLimit.isSelected() ^ txtLimit.isEditable()){
+		if(chckbxUserLimit.isSelected() == txtLimit.isEditable()){
 			if(chckbxUserLimit.isSelected()){
 				modes += lastOp == '+' ? "" : '+'; lastOp = '+'; limit = txtLimit.getText() + " ";}
 			else{
 				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
 			modes += 'k';}
-		if(chckbxSetPasswordFor.isSelected() ^ txtPassword.isEditable()){
-			if(chckbxSetPasswordFor.isSelected()){
-				modes += lastOp == '+' ? "" : '+'; lastOp = '+'; password = txtPassword.getText();}
-			else{
-				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
-			modes += 'k';}
 		String banMask = "";
 		if(chckbxSetBanMask.isSelected()){
-			modes += lastOp == '+' ? "" : '+'; lastOp = '+'; banMask = txtBanMask.getText();}
+			modes += (lastOp == '+' ? "" : '+') + "b"; lastOp = '+'; banMask = txtBanMask.getText() + " ";}
 		java.util.List<String> removeSelected = removeBanList.getSelectedValuesList();
 		if(!removeSelected.isEmpty()){
 			modes += lastOp == '-' ? "" : '-';
 			for(String item : removeSelected){
 				modes += 'b'; banMask += item + " ";}
 		}
-		mainFrame.getIRCConnection().doMode(chan, modes + " "+ limit + banMask + password);
+		if(chckbxSetPasswordFor.isSelected() == txtPassword.isEditable()){
+			if(chckbxSetPasswordFor.isSelected()){
+				modes += lastOp == '+' ? "" : '+'; lastOp = '+'; password = txtPassword.getText();}
+			else{
+				modes += lastOp == '-' ? "" : '-'; lastOp = '-';}
+			modes += 'k';}
+		mainFrame.getIRCConnection().doMode(chan, modes + " " + limit + banMask + password);
 	}
 	
 	protected JCheckBox getChckbxUserLimit() {

@@ -449,6 +449,11 @@ public class IRCMainFrame extends JFrame implements Runnable {
 		mnOptions.add(mntmControlCenter);
 		
 		JMenuItem mntmFullMessage = new JMenuItem("Full Message");
+		mntmFullMessage.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				conn.send(JOptionPane.showInputDialog("Input command here:"));
+			}
+		});
 		mntmFullMessage.setIcon(new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/comment_edit.png")));
 		mnOptions.add(mntmFullMessage);
 		
@@ -1361,5 +1366,23 @@ public class IRCMainFrame extends JFrame implements Runnable {
 	    int index = getSelectedIndex();
 	    updateTab(index, "* Notice: To "+ chan +": "+ msg);
 	  }
+
+	  /**
+	   * Passes the BAN message from the server the tab of the appropriate channel
+	   * @param index The index of channel in the tabs pane
+	   * @param arg The string representing the ban mask
+	   * @param nickAct Nickname of the one who set the ban
+	   * @param currentTimeMillis Current time in milliseconds since the Unix epoch
+	   */
+	protected void addBan(int index, String arg, String nickAct,
+			long currentTimeMillis) {
+		Component channel = tabs.getComponent(index);
+		((ChanPanel) channel).addBan(arg, nickAct, currentTimeMillis);
+	}
+
+	protected void removeBan(int index, String arg) {
+		Component channel = tabs.getComponent(index);
+		((ChanPanel) channel).removeBan(arg);
+	}
 	
 }
