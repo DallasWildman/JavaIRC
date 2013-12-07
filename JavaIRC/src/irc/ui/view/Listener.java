@@ -56,7 +56,7 @@ public class Listener extends IRCEventAdapter implements IRCEventListener {
   /*
    * Special field for collecting LIST data
    */
-  ArrayList<String> listOut = new ArrayList<String>();
+  private ArrayList<String> listOut = new ArrayList<String>();
 
   //-------------------------------
   // Listenning Events
@@ -555,6 +555,7 @@ public class Listener extends IRCEventAdapter implements IRCEventListener {
     	String input = (String) JOptionPane.showInputDialog(mainFrame, "", "Choose From a list of channels",
     			JOptionPane.PLAIN_MESSAGE, new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")),
     			listOut.toArray(), listOut.get(0));
+		mainFrame.updateChannels(listOut);
     	if(mainFrame.isConnected() && input != null)
     		conn.doJoin(input.split(" ")[1]);
     }

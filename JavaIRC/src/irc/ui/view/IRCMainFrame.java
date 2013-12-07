@@ -71,9 +71,11 @@ public class IRCMainFrame extends JFrame implements Runnable {
 	private String realname;
 	private String username;
 	private String quitMsg;
+	private ArrayList<String> channelsList = new ArrayList<String>();
 	private boolean isConnected = false;/** 
 	/* Perform executed on startup */
 	private String perform = "";
+	private long timeOfLastList;
 
 	private Image logo;
 	private String logoPath = "/irc/ui/resources/smiley.png";
@@ -398,6 +400,7 @@ public class IRCMainFrame extends JFrame implements Runnable {
 	private void initComps() {
 		
 		logo = new ImageIcon(this.logoPath).getImage();
+		timeOfLastList = System.currentTimeMillis();
 
 		setTitle("CSE6324: IRC Client");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -596,9 +599,11 @@ public class IRCMainFrame extends JFrame implements Runnable {
 		/*MenuBar -> Options -> List channels*/
 		mntmListChannels.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isConnected()){ 
+				if(isConnected() && (timeOfLastList > 30000 + System.currentTimeMillis() || channelsList.isEmpty()))
 					conn.doList();
-				}}
+				else
+					conn.doJoin(displayChannelsList());
+			}
 		});
 		
 		/* MenuBar -> Options -> Part */
@@ -650,6 +655,12 @@ public class IRCMainFrame extends JFrame implements Runnable {
 			}
 		});
 		
+	}
+	
+	private String displayChannelsList(){
+		return (String) JOptionPane.showInputDialog(this, "", "Choose From a list of channels",
+    			JOptionPane.PLAIN_MESSAGE, new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")),
+    			channelsList.toArray(), channelsList.get(0));
 	}
 
 	// -------------------------------
@@ -1383,6 +1394,10 @@ public class IRCMainFrame extends JFrame implements Runnable {
 	protected void removeBan(int index, String arg) {
 		Component channel = tabs.getComponent(index);
 		((ChanPanel) channel).removeBan(arg);
+	}
+
+	protected void updateChannels(ArrayList<String> listOut) {
+		channelsList = listOut; timeOfLastList = System.currentTimeMillis();
 	}
 	
 }
