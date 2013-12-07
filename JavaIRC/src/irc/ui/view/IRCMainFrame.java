@@ -560,6 +560,7 @@ public class IRCMainFrame extends JFrame implements Runnable {
 				if(isConnected()) {
 					conn.doQuit(quitMsg);
 					conn.close();
+					channelsList.clear();
 				}
 			}
 		});
@@ -599,10 +600,11 @@ public class IRCMainFrame extends JFrame implements Runnable {
 		/*MenuBar -> Options -> List channels*/
 		mntmListChannels.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isConnected() && (timeOfLastList > 30000 + System.currentTimeMillis() || channelsList.isEmpty()))
-					conn.doList();
-				else
-					conn.doJoin(displayChannelsList());
+				if(isConnected())
+					if(timeOfLastList > 30000 + System.currentTimeMillis() || channelsList.isEmpty())
+						conn.doList();
+					else
+						conn.doJoin(displayChannelsList());
 			}
 		});
 		
