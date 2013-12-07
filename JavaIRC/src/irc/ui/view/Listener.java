@@ -552,13 +552,14 @@ public class Listener extends IRCEventAdapter implements IRCEventListener {
     
     //<MRW> Show a dialog featuring the list of channels.
     if(num == IRCNumericReplies.RPL_LISTEND){
-    	String input = (String) JOptionPane.showInputDialog(mainFrame, "", "Choose From a list of channels",
-    			JOptionPane.PLAIN_MESSAGE, new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")),
-    			listOut.toArray(), listOut.get(0));
-		mainFrame.updateChannels(listOut);
-    	if(mainFrame.isConnected() && input != null)
-    		conn.doJoin(input.split(" ")[1]);
-    }
+    	if(!listOut.isEmpty()){
+    		String input = (String) JOptionPane.showInputDialog(mainFrame, "", "Choose From a list of channels",
+    				JOptionPane.PLAIN_MESSAGE, new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")),
+    				listOut.toArray(), listOut.get(0));
+    		mainFrame.updateChannels(listOut);
+    		if(mainFrame.isConnected() && input != null)
+    			conn.doJoin(input.split(" ")[1]);
+    }}
     
   }
 
