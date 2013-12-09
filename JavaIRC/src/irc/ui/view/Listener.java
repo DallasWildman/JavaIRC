@@ -2,8 +2,6 @@ package irc.ui.view;
 
 import java.awt.Component;
 import java.util.*;
-
-import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import irc.core.*;
 
@@ -11,6 +9,8 @@ import irc.core.*;
  * Listener for IRC servers' messages. 
  * It extends <code>IRCEventAdapter</code> and implements 
  * <code>IRCEventListener</code> which are both classes of the IRClib.
+ * 
+ * @author Luke
  */
 public class Listener extends IRCEventAdapter implements IRCEventListener {
 	
@@ -52,11 +52,6 @@ public class Listener extends IRCEventAdapter implements IRCEventListener {
     mainFrame = owner;
     conn = owner.getIRCConnection();
   }
-  
-  /*
-   * Special field for collecting LIST data
-   */
-  private ArrayList<String> listOut = new ArrayList<String>();
 
   //-------------------------------
   // Listenning Events
@@ -266,10 +261,10 @@ public class Listener extends IRCEventAdapter implements IRCEventListener {
       } else if (mode == 'b') {
         if (operator == '+') {
         //TODO: BAN
-          mainFrame.addBan(index, arg, nickAct, System.currentTimeMillis());
+          //mainFrame.addBan(index, arg, nickAct, System.currentTimeMillis());
         } else if (operator == '-') {
         	//TODO: BAN
-          mainFrame.removeBan(index, arg);
+          //mainFrame.removeBan(index, arg);
         }
       } else if (mode == 'i' || mode == 'k' || mode == 'l' || mode == 'm' 
           || mode == 'n' || mode == 'p' || mode == 's' || mode == 't') { 
@@ -533,34 +528,13 @@ public class Listener extends IRCEventAdapter implements IRCEventListener {
         mainFrame.setNick(nickNew);
       nickChecked = true; // don't check & cut anymore
     }
-    
-	// <MRW> List command sent start constructing a list
-	if(num == IRCNumericReplies.RPL_LISTSTART)
-		listOut.clear();
 
-    // print out info to console <MRW>(Unless a list command is sent)
-    if(num != IRCNumericReplies.RPL_LIST){
-    	String line;
-    	line = "* Reply: #"+ num +": Msg: "+ msg; 
-    	mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, line);
-    	line = "* Reply: #"+ num +": Value: "+ value;
-    	mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, line);}
-    else{
-    	//mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, value);
-    	listOut.add(value.substring(value.indexOf(' ')));
-    }
-    
-    //<MRW> Show a dialog featuring the list of channels.
-    if(num == IRCNumericReplies.RPL_LISTEND){
-    	if(!listOut.isEmpty()){
-    		String input = (String) JOptionPane.showInputDialog(mainFrame, "", "Choose From a list of channels",
-    				JOptionPane.PLAIN_MESSAGE, new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")),
-    				listOut.toArray(), listOut.get(0));
-    		mainFrame.updateChannels(listOut);
-    		if(mainFrame.isConnected() && input != null)
-    			conn.doJoin(input.split(" ")[1]);
-    }}
-    
+    // print out info to console
+    String line;
+    line = "* Reply: #"+ num +": Msg: "+ msg; 
+    mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, line);
+    line = "* Reply: #"+ num +": Value: "+ value;
+    mainFrame.updateTab(IRCUtil.CONSOLEWINDOWINDEX, line);
   }
 
 // ------------------------------

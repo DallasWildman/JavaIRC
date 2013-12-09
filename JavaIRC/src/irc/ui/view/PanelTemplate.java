@@ -11,7 +11,9 @@ import irc.core.*;
 /** 
  * This class is the base class for <code>ConsolePanel</code>, 
  * <code>ChanPanel</code> and <code>QueryPanel</code>. 
- * @author Christoph Schwering &lt;ch@schwering.org&gt;
+ * 
+ * @author Luke
+ * 
  */
 public abstract class PanelTemplate extends JPanel {
 
