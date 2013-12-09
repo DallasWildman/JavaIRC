@@ -55,6 +55,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 
+/**
+ * Main Frame.
+ * 
+ * @author Luke
+ *
+ */
 public class IRCMainFrame extends JFrame implements Runnable {
 	
 	// -------------------------------
@@ -71,11 +77,9 @@ public class IRCMainFrame extends JFrame implements Runnable {
 	private String realname;
 	private String username;
 	private String quitMsg;
-	private ArrayList<String> channelsList = new ArrayList<String>();
 	private boolean isConnected = false;/** 
 	/* Perform executed on startup */
 	private String perform = "";
-	private long timeOfLastList;
 
 	private Image logo;
 	private String logoPath = "/irc/ui/resources/smiley.png";
@@ -144,7 +148,6 @@ public class IRCMainFrame extends JFrame implements Runnable {
 	private JMenuItem mntmChangeNick;
 	private JMenuItem mntmWhois;
 	private JMenuItem mntmControlCenter;
-	private JMenuItem mntmListChannels;
 	
 	// -------------------------------
 	// Getters and Setters
@@ -400,7 +403,6 @@ public class IRCMainFrame extends JFrame implements Runnable {
 	private void initComps() {
 		
 		logo = new ImageIcon(this.logoPath).getImage();
-		timeOfLastList = System.currentTimeMillis();
 
 		setTitle("CSE6324: IRC Client");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -452,11 +454,6 @@ public class IRCMainFrame extends JFrame implements Runnable {
 		mnOptions.add(mntmControlCenter);
 		
 		JMenuItem mntmFullMessage = new JMenuItem("Full Message");
-		mntmFullMessage.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				conn.send(JOptionPane.showInputDialog("Input command here:"));
-			}
-		});
 		mntmFullMessage.setIcon(new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/comment_edit.png")));
 		mnOptions.add(mntmFullMessage);
 		
@@ -467,10 +464,6 @@ public class IRCMainFrame extends JFrame implements Runnable {
 		mntmJoin.setMnemonic('J');
 		mntmJoin.setIcon(new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")));
 		mnOptions.add(mntmJoin);
-		
-		mntmListChannels = new JMenuItem("List channels");
-		mntmListChannels.setIcon(new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")));
-		mnOptions.add(mntmListChannels);
 		
 		mntmPart = new JMenuItem("Part");
 		mntmPart.setIcon(new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_go.png")));
@@ -560,7 +553,6 @@ public class IRCMainFrame extends JFrame implements Runnable {
 				if(isConnected()) {
 					conn.doQuit(quitMsg);
 					conn.close();
-					channelsList.clear();
 				}
 			}
 		});
@@ -590,21 +582,9 @@ public class IRCMainFrame extends JFrame implements Runnable {
 		/* MenuBar -> Options -> Join */
 		mntmJoin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isConnected()){ 
-					String input = JOptionPane.showInputDialog(IRCMainFrame.this, "Enter the Channel Name to Join: ");
-					if(input != null)
-						conn.doJoin(input);
-				}}
-		});
-		
-		/*MenuBar -> Options -> List channels*/
-		mntmListChannels.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if(isConnected())
-					if(timeOfLastList > 30000 + System.currentTimeMillis() || channelsList.isEmpty())
-						conn.doList();
-					else
-						conn.doJoin(displayChannelsList());
+				String input = JOptionPane.showInputDialog(null, "Enter the Channel Name to Join: ");
+				if(isConnected() && input != null)
+					conn.doJoin(input);
 			}
 		});
 		
@@ -657,12 +637,6 @@ public class IRCMainFrame extends JFrame implements Runnable {
 			}
 		});
 		
-	}
-	
-	private String displayChannelsList(){
-		return (String) JOptionPane.showInputDialog(this, "", "Choose From a list of channels",
-    			JOptionPane.PLAIN_MESSAGE, new ImageIcon(IRCMainFrame.class.getResource("/irc/ui/resources/user_add.png")),
-    			channelsList.toArray(), channelsList.get(0));
 	}
 
 	// -------------------------------
@@ -1379,27 +1353,5 @@ public class IRCMainFrame extends JFrame implements Runnable {
 	    int index = getSelectedIndex();
 	    updateTab(index, "* Notice: To "+ chan +": "+ msg);
 	  }
-
-	  /**
-	   * Passes the BAN message from the server the tab of the appropriate channel
-	   * @param index The index of channel in the tabs pane
-	   * @param arg The string representing the ban mask
-	   * @param nickAct Nickname of the one who set the ban
-	   * @param currentTimeMillis Current time in milliseconds since the Unix epoch
-	   */
-	protected void addBan(int index, String arg, String nickAct,
-			long currentTimeMillis) {
-		Component channel = tabs.getComponent(index);
-		((ChanPanel) channel).addBan(arg, nickAct, currentTimeMillis);
-	}
-
-	protected void removeBan(int index, String arg) {
-		Component channel = tabs.getComponent(index);
-		((ChanPanel) channel).removeBan(arg);
-	}
-
-	protected void updateChannels(ArrayList<String> listOut) {
-		channelsList = listOut; timeOfLastList = System.currentTimeMillis();
-	}
 	
 }

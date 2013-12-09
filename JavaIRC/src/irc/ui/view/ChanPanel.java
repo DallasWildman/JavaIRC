@@ -22,7 +22,7 @@ public class ChanPanel extends PanelTemplate implements ActionListener {
   private JPopupMenu nicklistPopup = getNicklistPopupMenu();
 
    //* The arraylist which saves the list of banmask. 
-  private ArrayList<String> banlist = new ArrayList<String>();
+  private ArrayList banlist = new ArrayList();
 
    //* Represents the actual modes of the channel.<br />
   private StringBuffer modebuffer = new StringBuffer();
@@ -268,7 +268,7 @@ public class ChanPanel extends PanelTemplate implements ActionListener {
 
   /** 
    * Removes a banmask from the Arraylist. 
-   * @param banmask The banmask which is to be removed.
+   * @param banmask The banmask which is to remove.
    */
   public void removeBan(String banmask) {
     String[] bans = new String[banlist.size()];

@@ -6,6 +6,9 @@ import java.io.*;
 
 /** 
  * This is the <code>IRCPanel</code> for all queries. 
+ * 
+ * @author Luke
+ * 
  */
 public class QueryPanel extends PanelTemplate implements ActionListener {
 
