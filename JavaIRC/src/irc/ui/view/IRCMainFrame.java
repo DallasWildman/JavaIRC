@@ -597,7 +597,7 @@ public class IRCMainFrame extends JFrame implements Runnable {
 				}}
 		});
 		
-		/*MenuBar -> Options -> List channels*/
+		/*MenuBar -> Options -> List channels <MRW>*/ 
 		mntmListChannels.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(isConnected())
@@ -1397,7 +1397,13 @@ public class IRCMainFrame extends JFrame implements Runnable {
 		Component channel = tabs.getComponent(index);
 		((ChanPanel) channel).removeBan(arg);
 	}
-
+	
+	/**
+	 * Updates the channel list
+	 * @param listOut New list of channels gathered by the LIST command
+	 * @author Matthew Waller
+	 */
+	
 	protected void updateChannels(ArrayList<String> listOut) {
 		channelsList = listOut; timeOfLastList = System.currentTimeMillis();
 	}
