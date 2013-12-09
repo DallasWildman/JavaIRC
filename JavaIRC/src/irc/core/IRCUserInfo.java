@@ -4,8 +4,6 @@ package irc.core;
  * This class is modified from IRClib to hold user's
  * real&nick names, host information.
  * 
- * Detailed information for IRClib can be found at:
- * http://moepii.sourceforge.net/
  */
 public class IRCUserInfo {
 	

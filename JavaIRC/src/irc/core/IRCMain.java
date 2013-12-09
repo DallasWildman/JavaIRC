@@ -24,11 +24,6 @@ import java.net.SocketException;
  *  &#42; the realname is "Mr. Foobar". The username "foobar".
  *  &#42; Because of setDaemon(true), the JVM exits even if this thread is 
  *  &#42; running.
- *  &#42; An instance of the class MyListener which must implement 
- *  &#42; IRCActionListener is added as only event-listener for the connection. 
- *  &#42; The connection is told to parse out mIRC color codes and to enable
- *  &#42; automatic PING? PONG! replies.
- *  &#42;/
  * IRCConnection conn = new IRCConnection(
  *                            "irc.somenetwork.com", 
  *                            6667, 

@@ -20,9 +20,6 @@ package irc.core;
  * This class is modified from IRClib to support all
  * channel-modes defined in RFC1459
  * 
- * Detailed information for IRClib can be found at:
- * http://moepii.sourceforge.net/
- * 
  */
 public class IRCModeParser {
 	

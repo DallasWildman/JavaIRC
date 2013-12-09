@@ -9,8 +9,6 @@ import javax.swing.JOptionPane;
  * This class is modified from IRClib to provide some 
  * useful utilities to process client-side tasks
  * 
- * Detailed information for IRClib can be found at:
- * http://moepii.sourceforge.net/
  */
 public class IRCUtil implements IRCNumericReplies{
 	
