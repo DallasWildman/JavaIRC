@@ -7,6 +7,9 @@ import javax.swing.*;
 
 /** 
  * The paste-dialog where the user can input long text which is pasted then.
+ * 
+ * @author Luke
+ * 
  */
 public class PasteDialog extends JDialog implements Runnable {
 
