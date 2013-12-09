@@ -28,6 +28,12 @@ import javax.swing.ImageIcon;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
+/**
+ * This class shows configuration window.
+ * 
+ * @author Luke
+ *
+ */
 public class ConfigDialog extends JDialog {
 	
 	private IRCMainFrame mainFrame;

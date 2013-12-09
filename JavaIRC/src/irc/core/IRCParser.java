@@ -64,9 +64,6 @@ package irc.core;
  * &lt;crlf&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;::=
  * CR LF<br />
  * </code></blockquote>
- * @author Christoph Schwering &lt;schwering@gmail.com&gt;
- * @version 3.22
- * @see IRCConnection
  */
 public class IRCParser {
 	

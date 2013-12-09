@@ -4,9 +4,6 @@ package irc.core;
  * This class is modified from IRClib to maintain constants 
  * in IRC protocol including: error replies, command respond.
  * 
- * Detailed information for IRClib can be found at:
- * http://moepii.sourceforge.net/
- *
  */
 public interface IRCNumericReplies {
 

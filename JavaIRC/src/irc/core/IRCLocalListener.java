@@ -1,5 +1,12 @@
 package irc.core;
 
+/**
+ * IRCEventLocalListner is a concrete implementation of <code>IRCEventListener</code>,
+ *  basically it simply print out the relative information on terminal
+ * 
+ * @author Luke
+ *
+ */
 public class IRCLocalListener extends IRCEventAdapter 
 							  implements IRCEventListener {
 
